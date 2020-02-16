@@ -19,7 +19,9 @@ public class MainActivity extends AppCompatActivity {
     private GroceryAdapter mAdapter;
     private EditText mEditTextName;
     private EditText mEditTextAisle;
-    private int aisle;
+    private String currentColumnMarketAisles = GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE;
+    private Integer sqlTrue = 1;
+    private Integer sqlFalse = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,25 +57,33 @@ public class MainActivity extends AppCompatActivity {
         }
 
         String name = mEditTextName.getText().toString();
+        String nameCapitalised = name.substring(0, 1).toUpperCase() + name.substring(1);
         Integer aisle = Integer.parseInt(mEditTextAisle.getText().toString());
         ContentValues cv = new ContentValues();
-        cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, name);
-        cv.put(GroceryContract.GroceryEntry.COLUMN_AISLE, aisle);
+        cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, nameCapitalised);
+        cv.put(currentColumnMarketAisles, aisle);
 
         mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
         mAdapter.swapCursor(getAllItems());
     }
 
+    public void onDeleteAllRows(View view) {
+        mDatabase.execSQL("DELETE FROM " + GroceryContract.GroceryEntry.TABLE_NAME);
+        mDatabase.execSQL("DELETE FROM " + GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET);
+        mAdapter.swapCursor(getAllItems());
+    }
+
 
     private Cursor getAllItems() {
+        String[] mySelectionArgs = new String[]{String.valueOf(sqlTrue)};
         return mDatabase.query(
                 GroceryContract.GroceryEntry.TABLE_NAME,
                 null,
+                GroceryContract.GroceryEntry.COLUMN_IN_LIST + " =?", //equivalent to WHERE. A filter declaring which rows to return, formatted as an SQL WHERE clause (excluding the WHERE itself). Passing null will return all rows for the given table.
+                mySelectionArgs, //You may include ?s in selection, which will be replaced by the values from selectionArgs, in order that they appear in the selection. The values will be bound as Strings.
                 null,
                 null,
-                null,
-                null,
-                GroceryContract.GroceryEntry.COLUMN_AISLE + " ASC"
+                currentColumnMarketAisles + " ASC, " + GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
         );
     }
 }

@@ -46,7 +46,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         }
 
         String name = mCursor.getString(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
-        int aisle = mCursor.getInt(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_AISLE));
+        int aisle = mCursor.getInt(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE));
 
         holder.nameText.setText(name);
         holder.aisleText.setText(String.valueOf(aisle));
