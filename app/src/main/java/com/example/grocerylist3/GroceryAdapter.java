@@ -5,7 +5,7 @@ import android.database.Cursor;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -20,14 +20,14 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
     public class GroceryViewHolder extends RecyclerView.ViewHolder {
-        public TextView nameText;
-        public TextView aisleText;
+        public EditText nameText;
+        public EditText aisleText;
 
         public GroceryViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            nameText = itemView.findViewById(R.id.textview_name_item);
-            aisleText = itemView.findViewById(R.id.textview_aisle_item);
+            nameText = itemView.findViewById(R.id.edittext_product_name);
+            aisleText = itemView.findViewById(R.id.edittext_aisle_number);
         }
     }
 
@@ -46,10 +46,14 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         }
 
         String name = mCursor.getString(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
-        int aisle = mCursor.getInt(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE));
+        Integer aisle = mCursor.getInt(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE));
 
         holder.nameText.setText(name);
-        holder.aisleText.setText(String.valueOf(aisle));
+        if (aisle.equals(-1)) {
+            holder.aisleText.setText("?");
+        } else {
+            holder.aisleText.setText(String.valueOf(aisle));
+        }
     }
 
     @Override

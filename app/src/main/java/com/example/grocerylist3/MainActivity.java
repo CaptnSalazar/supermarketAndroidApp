@@ -11,17 +11,25 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ToggleButton;
+
+import static android.text.TextUtils.isDigitsOnly;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity*<*<*<*<*<*";
     private SQLiteDatabase mDatabase;
     private GroceryAdapter mAdapter;
+
+    private RecyclerView recyclerView;
     private EditText mEditTextName;
-    private EditText mEditTextAisle;
+    private ToggleButton toggle;
+
     private String currentColumnMarketAisles = GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE;
     private Integer sqlTrue = 1;
     private Integer sqlFalse = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,42 +40,97 @@ public class MainActivity extends AppCompatActivity {
         GroceryDBHelper dbHelper = new GroceryDBHelper(this);
         mDatabase = dbHelper.getWritableDatabase();
 
-        RecyclerView recyclerView = findViewById(R.id.recyclerview);
+        recyclerView = findViewById(R.id.recyclerview);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         mAdapter = new GroceryAdapter(this, getAllItems());
         recyclerView.setAdapter(mAdapter);
 
-        mEditTextName = findViewById(R.id.edittext_name);
-        mEditTextAisle = findViewById(R.id.edittext_aisle);
+        mEditTextName = findViewById(R.id.edittext_new_product);
 
         Button buttonAdd = findViewById(R.id.button_add);
-
         buttonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 addItem();
             }
         });
+
+        toggle = findViewById(R.id.toggleButtonEditSave);
+        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    Log.d(TAG, "toggle is checked");
+                    //makeListUneditable();
+                } else {
+                    Log.d(TAG, "toggle is NOT checked");
+                    saveAisles();
+                }
+            }
+        });
+
     }
 
     private void addItem() {
-
+        Log.d(TAG, "addItem() called");
+        Log.d(TAG, "inside addItem and toggle value is " + toggle.isChecked());
         if (mEditTextName.getText().toString().trim ().length() == 0) {
             return;
         }
 
         String name = mEditTextName.getText().toString();
         String nameCapitalised = name.substring(0, 1).toUpperCase() + name.substring(1);
-        Integer aisle = Integer.parseInt(mEditTextAisle.getText().toString());
+        //Integer aisle = Integer.parseInt(mEditTextAisle.getText().toString());
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, nameCapitalised);
-        cv.put(currentColumnMarketAisles, aisle);
+        //cv.put(currentColumnMarketAisles, aisle);
 
         mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
         mAdapter.swapCursor(getAllItems());
+        mEditTextName.getText().clear();
     }
 
+
+    private void saveAisles() {
+        Log.d(TAG, "saveAisles() called");
+        View v; // v will be each item (i.e. one set of aisleNumber, productName, checkBox views) in recyclerview.
+        for (int i = 0; i < recyclerView.getChildCount(); i++) {
+            Log.d(TAG, "we are at the " + String.valueOf(i) + "th value of the recyclerview ------");
+            v = recyclerView.getChildAt(i); // v encapsulates a pair of aisle editText and product name EditText.
+            EditText aisleEditText = v.findViewById(R.id.edittext_aisle_number);
+            EditText productNameEditText = v.findViewById(R.id.edittext_product_name);
+            String aisleNumberStr = aisleEditText.getText().toString();
+            String productNameStr = productNameEditText.getText().toString();
+            Log.d("MainActivity", "aisle found --> " + aisleNumberStr);
+            Log.d("MainActivity", "product found --> " + productNameStr);
+            updateAisle(aisleNumberStr, productNameStr);
+            //aisleEditText.setKeyListener(null); //makes the EditText non-editable so, it acts like a TextView.
+        }
+    }
+
+    private void updateAisle(String aisleNumberStr, String productNameStr) {
+        Log.d(TAG, "updateAisle() called");
+        if ((aisleNumberStr.length() == 0) || (productNameStr.length() == 0)) {
+            Log.d("MainActivity", "updateAisle did not work because editText of aisle number or productName is empty");
+            return;
+        }
+
+        if (isDigitsOnly(aisleNumberStr)) {
+            ContentValues cv = new ContentValues();
+            cv.put(currentColumnMarketAisles, Integer.parseInt(aisleNumberStr));
+
+            String[] mySelectionArgs = {productNameStr};
+            Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+                    cv,
+                    GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
+                    mySelectionArgs);
+            Log.d(TAG, "number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
+            mAdapter.swapCursor(getAllItems());
+        }
+    }
+
+
     public void onDeleteAllRows(View view) {
+        Log.d(TAG, "onDeleteAllRows() called");
         mDatabase.execSQL("DELETE FROM " + GroceryContract.GroceryEntry.TABLE_NAME);
         mDatabase.execSQL("DELETE FROM " + GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET);
         mAdapter.swapCursor(getAllItems());
@@ -75,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private Cursor getAllItems() {
+        Log.d(TAG, "getAllItems() called");
         String[] mySelectionArgs = new String[]{String.valueOf(sqlTrue)};
         return mDatabase.query(
                 GroceryContract.GroceryEntry.TABLE_NAME,

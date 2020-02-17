@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">GroceryList3</string>
+    <string name="aisle_default">\?</string>
+    <string name="product_name">Product name</string>
+    <string name="add_new_item">Add</string>
+    <string name="button_edit_list">Edit List</string>
+    <string name="toggle_edit_list">Edit Aisles</string>
+    <string name="toggle_save_list">Save Aisles</string>
 </resources>
