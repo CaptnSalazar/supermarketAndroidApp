@@ -1,6 +1,8 @@
 package com.example.grocerylist3;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,7 +26,8 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     private EditText mEditTextName;
-    private ToggleButton toggle;
+    private ToggleButton toggleEditAisle;
+    private ToggleButton toggleDelete;
 
     private String currentColumnMarketAisles = GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE;
     private Integer sqlTrue = 1;
@@ -45,6 +48,39 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new GroceryAdapter(this, getAllItems());
         recyclerView.setAdapter(mAdapter);
 
+        toggleDelete = findViewById(R.id.toggleButtonDeleteItem);
+
+        toggleEditAisle = findViewById(R.id.toggleButtonEditSave);
+        toggleEditAisle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    Log.d(TAG, "toggleEditAisle is checked");
+                    //makeListUneditable();
+                } else {
+                    Log.d(TAG, "toggleEditAisle is NOT checked");
+                    saveAisles();
+                }
+            }
+        });
+
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                if (toggleDelete.isChecked()) {
+                    removeItem((long) viewHolder.itemView.getTag());
+                } else {
+                    mAdapter.swapCursor(getAllItems()); //don't wanna figure out proper way (i.e. disabling swipe altogether).
+                }
+
+            }
+        }).attachToRecyclerView(recyclerView);
+
         mEditTextName = findViewById(R.id.edittext_new_product);
 
         Button buttonAdd = findViewById(R.id.button_add);
@@ -54,25 +90,12 @@ public class MainActivity extends AppCompatActivity {
                 addItem();
             }
         });
-
-        toggle = findViewById(R.id.toggleButtonEditSave);
-        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
-                    Log.d(TAG, "toggle is checked");
-                    //makeListUneditable();
-                } else {
-                    Log.d(TAG, "toggle is NOT checked");
-                    saveAisles();
-                }
-            }
-        });
-
     }
 
     private void addItem() {
         Log.d(TAG, "addItem() called");
-        Log.d(TAG, "inside addItem and toggle value is " + toggle.isChecked());
+        Log.d(TAG, "inside addItem and toggleEditAisle value is " + toggleEditAisle.isChecked());
+        Log.d(TAG, "inside addItem and toggleDelete value is " + toggleDelete.isChecked());
         if (mEditTextName.getText().toString().trim ().length() == 0) {
             return;
         }
@@ -87,6 +110,20 @@ public class MainActivity extends AppCompatActivity {
         mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
         mAdapter.swapCursor(getAllItems());
         mEditTextName.getText().clear();
+    }
+
+
+    private void removeItem(long id) {
+        ContentValues cv = new ContentValues();
+        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, sqlFalse);
+        String[] mySelectionArgs = {String.valueOf(id)};
+        //update(java.lang.String, android.content.ContentValues, java.lang.String, java.lang.String[])
+        Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+                cv,
+                GroceryContract.GroceryEntry._ID + " =?",
+                mySelectionArgs);
+        Log.d(TAG, "number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed.
+        mAdapter.swapCursor(getAllItems());
     }
 
 
@@ -109,12 +146,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateAisle(String aisleNumberStr, String productNameStr) {
         Log.d(TAG, "updateAisle() called");
-        if ((aisleNumberStr.length() == 0) || (productNameStr.length() == 0)) {
-            Log.d("MainActivity", "updateAisle did not work because editText of aisle number or productName is empty");
-            return;
-        }
 
-        if (isDigitsOnly(aisleNumberStr)) {
+        if (isDigitsOnly(aisleNumberStr) && (aisleNumberStr.length() > 0) && (productNameStr.length() > 0)) {
             ContentValues cv = new ContentValues();
             cv.put(currentColumnMarketAisles, Integer.parseInt(aisleNumberStr));
 
@@ -151,3 +184,7 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 }
+
+/* to prevent the same item from being added in the list, on addItem() check if the there is already
+inList and if so, don't update the list - instead display a pop up message saying "item already in list".
+ */
