@@ -17,6 +17,8 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ToggleButton;
 
+import com.google.android.material.snackbar.Snackbar;
+
 import static android.text.TextUtils.isDigitsOnly;
 
 public class MainActivity extends AppCompatActivity {
@@ -43,9 +45,16 @@ public class MainActivity extends AppCompatActivity {
         GroceryDBHelper dbHelper = new GroceryDBHelper(this);
         mDatabase = dbHelper.getWritableDatabase();
 
+
+//        recyclerView = findViewById(R.id.recyclerview);
+//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+//        mAdapter = new GroceryAdapter(this, getAllItems());
+//        recyclerView.setAdapter(mAdapter);
+        //Changed the 4 lines above to the following:
         recyclerView = findViewById(R.id.recyclerview);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new GroceryAdapter(this, getAllItems());
+        LinearLayoutManager manager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(manager);
+        mAdapter = new GroceryAdapter(manager, getAllItems(), this);
         recyclerView.setAdapter(mAdapter);
 
         toggleDelete = findViewById(R.id.toggleButtonDeleteItem);
@@ -75,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
                 if (toggleDelete.isChecked()) {
                     removeItem((long) viewHolder.itemView.getTag());
                 } else {
+                    Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_delete_items, Snackbar.LENGTH_SHORT).show();
                     mAdapter.swapCursor(getAllItems()); //don't wanna figure out proper way (i.e. disabling swipe altogether).
                 }
 
@@ -102,14 +112,25 @@ public class MainActivity extends AppCompatActivity {
 
         String name = mEditTextName.getText().toString();
         String nameCapitalised = name.substring(0, 1).toUpperCase() + name.substring(1);
-        //Integer aisle = Integer.parseInt(mEditTextAisle.getText().toString());
+
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, nameCapitalised);
-        //cv.put(currentColumnMarketAisles, aisle);
+        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, sqlTrue);
+        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, sqlFalse);
 
-        mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
+        String[] mySelectionArgs = {nameCapitalised};
+        Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+                cv,
+                GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
+                mySelectionArgs);
+        Log.d("MainActivity", "number of rows updated: " + String.valueOf(numRowsUpdated));
+        if (numRowsUpdated < 1) {
+            mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
+        }
+
         mAdapter.swapCursor(getAllItems());
         mEditTextName.getText().clear();
+        recyclerView.scrollToPosition(mAdapter.newItemPosition(nameCapitalised));
     }
 
 
@@ -184,7 +205,3 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 }
-
-/* to prevent the same item from being added in the list, on addItem() check if the there is already
-inList and if so, don't update the list - instead display a pop up message saying "item already in list".
- */
