@@ -32,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private ToggleButton toggleDelete;
 
     private String currentColumnMarketAisles = GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE;
-    private Integer sqlTrue = 1;
-    private Integer sqlFalse = 0;
+    private Integer SQL_TRUE = 1;
+    private Integer SQL_FALSE = 0;
 
 
     @Override
@@ -45,17 +45,23 @@ public class MainActivity extends AppCompatActivity {
         GroceryDBHelper dbHelper = new GroceryDBHelper(this);
         mDatabase = dbHelper.getWritableDatabase();
 
-
-//        recyclerView = findViewById(R.id.recyclerview);
-//        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-//        mAdapter = new GroceryAdapter(this, getAllItems());
-//        recyclerView.setAdapter(mAdapter);
-        //Changed the 4 lines above to the following:
+        /*recyclerView = findViewById(R.id.recyclerview);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mAdapter = new GroceryAdapter(this, getAllItems());
+        recyclerView.setAdapter(mAdapter);
+        Changed the 4 lines above to the following: */
         recyclerView = findViewById(R.id.recyclerview);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(manager);
         mAdapter = new GroceryAdapter(manager, getAllItems(), this);
         recyclerView.setAdapter(mAdapter);
+
+        mAdapter.setOnItemClickListener(new GroceryAdapter.OnItemClickListener() {
+            @Override
+            public void onCheckBox(int position) {
+                addToTrolley(position);
+            }
+        });
 
         toggleDelete = findViewById(R.id.toggleButtonDeleteItem);
 
@@ -102,6 +108,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+
+    public void addToTrolley(int position) {
+        String productName = mAdapter.getItemName(position);
+        //maybe call swapCursor because getItemName changes the cursor position?
+        mAdapter.swapCursor(getAllItems());
+        //recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised)); //maybe call this?
+    }
+
+
     private void addItem() {
         Log.d(TAG, "addItem() called");
         Log.d(TAG, "inside addItem and toggleEditAisle value is " + toggleEditAisle.isChecked());
@@ -115,8 +130,8 @@ public class MainActivity extends AppCompatActivity {
 
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, nameCapitalised);
-        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, sqlTrue);
-        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, sqlFalse);
+        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_TRUE);
+        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
 
         String[] mySelectionArgs = {nameCapitalised};
         Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
@@ -130,13 +145,13 @@ public class MainActivity extends AppCompatActivity {
 
         mAdapter.swapCursor(getAllItems());
         mEditTextName.getText().clear();
-        recyclerView.scrollToPosition(mAdapter.newItemPosition(nameCapitalised));
+        recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised));
     }
 
 
     private void removeItem(long id) {
         ContentValues cv = new ContentValues();
-        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, sqlFalse);
+        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_FALSE);
         String[] mySelectionArgs = {String.valueOf(id)};
         //update(java.lang.String, android.content.ContentValues, java.lang.String, java.lang.String[])
         Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
@@ -183,6 +198,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void onCheckboxClicked(View view) {
+        EditText editTextProductName = view.findViewById(R.id.edittext_product_name);
+        String productName = editTextProductName.getText().toString();
+
+        ContentValues cv = new ContentValues();
+        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_TRUE);
+        String[] mySelectionArgs = {productName};
+        Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+                cv,
+                GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
+                mySelectionArgs);
+        Log.d(TAG, "number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed.
+        mAdapter.swapCursor(getAllItems());
+
+    }
+
+
     public void onDeleteAllRows(View view) {
         Log.d(TAG, "onDeleteAllRows() called");
         mDatabase.execSQL("DELETE FROM " + GroceryContract.GroceryEntry.TABLE_NAME);
@@ -193,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
 
     private Cursor getAllItems() {
         Log.d(TAG, "getAllItems() called");
-        String[] mySelectionArgs = new String[]{String.valueOf(sqlTrue)};
+        String[] mySelectionArgs = new String[]{String.valueOf(SQL_TRUE)};
         return mDatabase.query(
                 GroceryContract.GroceryEntry.TABLE_NAME,
                 null,

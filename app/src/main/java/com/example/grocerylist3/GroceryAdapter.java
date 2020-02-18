@@ -18,6 +18,22 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     private LinearLayoutManager mManager;
     private Context mContext;
     private Cursor mCursor;
+    private OnItemClickListener mListener;
+
+    public interface OnItemClickListener {
+        /*An interface is a completely "abstract class" that is used to group related methods with empty bodies.
+        * To access the interface methods, the interface must be "implemented" (kinda like inherited) by another
+        *  class with the implements keyword (instead of extends). The body of the interface method is provided
+        * by the "implement" class (see onCheckBox in the MainActivity class).  */
+
+        //void onItemClick(int position);
+        void onCheckBox(int position);
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        mListener = listener;
+    }
+
 
     public GroceryAdapter(LinearLayoutManager manager, Cursor cursor, Context context) {
         Log.d(TAG, "GroceryAdapter() called");
@@ -26,19 +42,33 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         mCursor = cursor;
     }
 
+
     public class GroceryViewHolder extends RecyclerView.ViewHolder {
         public EditText nameText;
         public EditText aisleText;
         public CheckBox checkBox;
 
-        public GroceryViewHolder(@NonNull View itemView) {
+        public GroceryViewHolder(@NonNull View itemView, final OnItemClickListener listener) {
             super(itemView);
 
             nameText = itemView.findViewById(R.id.edittext_product_name);
             aisleText = itemView.findViewById(R.id.edittext_aisle_number);
             checkBox = itemView.findViewById(R.id.checkBox);
+
+            checkBox.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        int position = getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION) {
+                            listener.onCheckBox(position);
+                        }
+                    }
+                }
+            });
         }
     }
+
 
     @NonNull
     @Override
@@ -46,8 +76,9 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         Log.d(TAG, "onCreateViewHolder() called");
         LayoutInflater inflater = LayoutInflater.from(mContext);
         View view = inflater.inflate(R.layout.grocery_item, parent, false);
-        return new GroceryViewHolder(view);
+        return new GroceryViewHolder(view, mListener);
     }
+
 
     @Override
     public void onBindViewHolder(@NonNull GroceryViewHolder holder, int position) {
@@ -56,17 +87,13 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
             return;
         }
 
-        Log.d(TAG, "position is " + position);
-
-        //mManager.scrollToPosition(0); //this always sets the recyclerviewer to go to the top
-        //mManager.scrollToPosition(position); //this does crazy shit and I think it's because onBindViewHolder is not just called when addItem is called (I know this for a fact).
-
         String name = mCursor.getString(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
         Integer aisle = mCursor.getInt(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE));
+        Integer isInTrolley = mCursor.getInt(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY));
         long id = mCursor.getLong(mCursor.getColumnIndex(GroceryContract.GroceryEntry._ID));
 
         holder.nameText.setText(name);
-        Log.d(TAG, "name is " + name);
+        holder.checkBox.setChecked(integerToBoolean(isInTrolley));
         holder.itemView.setTag(id); //An ItemView in Android can be described as a single row item in a list. It references an item from where we find the view from its layout file.
 
         if (aisle.equals(-1)) {
@@ -76,22 +103,42 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         }
     }
 
+
     @Override
     public int getItemCount() {
         return mCursor.getCount();
     }
 
-    public Integer newItemPosition(String newItemName) {
+
+    private boolean integerToBoolean(Integer number) {
+        if (number == 0) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+
+    public Integer getItemPosition(String itemName) {
         Integer position = 0;
         //since we know we just added this item to the list, moveToNext() will never return null
         for (mCursor.moveToFirst();
-             !newItemName.equals(mCursor.getString(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME)));
+             !itemName.equals(mCursor.getString(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME)));
              mCursor.moveToNext()) {
             position++;
         }
         Log.d(TAG, "Inside NewItemPosition, position is: " + position);
         return position;
     }
+
+
+    public String getItemName(int position) {
+        mCursor.moveToPosition(position);
+        String nameOfItemChecked = mCursor.getString(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
+        Log.d(TAG, "Inside addItemToTrolley(), product checked is: " + nameOfItemChecked);
+        return nameOfItemChecked;
+    }
+
 
     //every time we update database, we have to pass a new cursor.
     public void swapCursor(Cursor newCursor) {
