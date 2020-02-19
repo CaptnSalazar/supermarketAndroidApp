@@ -9,4 +9,5 @@
     <string name="toggle_delete_item">Delete Item(s)</string>
     <string name="snack_message_press_delete_items">Press DELETE ITEM(S) to allow swipe delete</string>
     <string name="snack_message_swipe_to_delete">Swipe/drag item left or right to delete</string>
+    <string name="snack_message_press_save_changes">Press \"Save Changes\" before doing other things.</string>
 </resources>

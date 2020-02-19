@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         mAdapter.setOnItemClickListener(new GroceryAdapter.OnItemClickListener() {
             @Override
             public void onCheckBox(int position) {
-                toggleInTrolley(position); //indirectly tick the checkbox
+                toggleInTrolley(position); //indirectly tick/untick the checkbox.
             }
         });
 
@@ -122,29 +122,37 @@ public class MainActivity extends AppCompatActivity {
         buttonAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                addItem();
+                if (toggleEditAisle.isChecked()) {
+                    //also make "Edit List" button glow
+                    Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
+                } else {
+                    addItem();
+                }
             }
         });
     }
 
 
     public void toggleInTrolley(int position) {
-        String productName = mAdapter.getItemName(position);
-        ContentValues cv = new ContentValues();
-        Integer inTrolley = mAdapter.getInTrolleyValue(position);
-        if (inTrolley.equals(SQL_TRUE)) {
-            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
+        if (!toggleEditAisle.isChecked()) {
+            String productName = mAdapter.getItemName(position);
+            ContentValues cv = new ContentValues();
+            Integer inTrolley = mAdapter.getInTrolleyValue(position);
+            if (inTrolley.equals(SQL_TRUE)) {
+                cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
+            } else {
+                cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_TRUE);
+            }
+            String[] mySelectionArgs = {productName};
+            Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+                    cv,
+                    GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
+                    mySelectionArgs);
+            Log.d("MainActivity", "number of rows updated: " + numRowsUpdated);
         } else {
-            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_TRUE);
+            Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
         }
 
-        String[] mySelectionArgs = {productName};
-        Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
-                cv,
-                GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
-                mySelectionArgs);
-        Log.d("MainActivity", "number of rows updated: " + numRowsUpdated);
-        //maybe call swapCursor because getItemName changes the cursor position?
         mAdapter.swapCursor(getAllItems());
         //recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised)); //maybe call this?
     }
@@ -161,23 +169,20 @@ public class MainActivity extends AppCompatActivity {
         String name = mEditTextName.getText().toString();
         String nameCapitalised = name.substring(0, 1).toUpperCase() + name.substring(1);
 
-        if (!mAdapter.isItemInList(nameCapitalised)) {
-            Log.d(TAG, "item is not in list");
-            ContentValues cv = new ContentValues();
-            cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, nameCapitalised);
-            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_TRUE);
-            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
-            String[] mySelectionArgs = {nameCapitalised};
-            Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
-                    cv,
-                    GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
-                    mySelectionArgs);
-            Log.d("MainActivity", "number of rows updated: " + String.valueOf(numRowsUpdated));
-            if (numRowsUpdated < 1) {
-                mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
-            }
-            mAdapter.swapCursor(getAllItems());
+        ContentValues cv = new ContentValues();
+        cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, nameCapitalised);
+        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_TRUE);
+        //cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
+        String[] mySelectionArgs = {nameCapitalised};
+        Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+                cv,
+                GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
+                mySelectionArgs);
+        Log.d("MainActivity", "number of rows updated: " + numRowsUpdated);
+        if (numRowsUpdated < 1) {
+            mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
         }
+        mAdapter.swapCursor(getAllItems());
 
         mEditTextName.getText().clear();
         recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised));
@@ -275,18 +280,17 @@ public class MainActivity extends AppCompatActivity {
 
 /* I can now toggle the swipe feature of deletion by pressing the delete button. Also, ticking the checkboxes
 make the inTrolley value toggle, which causes the checkbox to be ticked or not ticked.
-PROBLEM: when i try to add an item to a list that's already in the list and is ticked, it unticked that item,
+Solved PROBLEM: when i try to add an item to a list that's already in the list and is ticked, it unticked that item,
 because I didn't check to see if the item was already in the list.
-POSSIBLE SOLUTION:
-1) when you add an item onto a list, don't do cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
+SOLUTION: When you add an item onto a list, don't do cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
 just let it be its default value or if it already exists, then it will be that already existing value. Which
 will be ticked if the item is already in the list and in the trolley, or if the item was removed from the
 list then it will be unticked because I untick it before removing it from a list.
-2) check if the item is already in the list - I tried this and the function isItemInList() causes bugs
-sometimes when the item is NOT in the list --> it accesses an index 1+ out of range.
 Future implementation:
 1) when the user adds an item to the list that has very similar spelling to another,
 make a window pop-up, saying that there already exists a record of [this other item]. Are they they the same?
 Which spelling is right?
 2) Autocompletion based on the items that already exist in database.
+3) Make the Edit List button glow or point to it, when someone tries to do other things while in Edit mode.
+4) Make the EditTexts of the list not allow keyboard pop up when you click on them.
  */
