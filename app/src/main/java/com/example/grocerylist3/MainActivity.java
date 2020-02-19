@@ -292,5 +292,5 @@ make a window pop-up, saying that there already exists a record of [this other i
 Which spelling is right?
 2) Autocompletion based on the items that already exist in database.
 3) Make the Edit List button glow or point to it, when someone tries to do other things while in Edit mode.
-4) Make the EditTexts of the list not allow keyboard pop up when you click on them.
+4) Make the EditTexts of the list not allow keyboard pop up when you click on them..
  */

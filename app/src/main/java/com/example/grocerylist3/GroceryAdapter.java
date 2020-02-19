@@ -148,7 +148,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
 
-    //every time we update database, we have to pass a new cursor.
+    //every time we update database, we have to pass a new cursor..
     public void swapCursor(Cursor newCursor) {
         if (mCursor != null) {
             mCursor.close(); //close and get rid of cursor
