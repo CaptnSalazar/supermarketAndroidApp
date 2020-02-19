@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
     private GroceryAdapter mAdapter;
 
     private RecyclerView recyclerView;
+    boolean mSwipeable;
     private EditText mEditTextName;
     private ToggleButton toggleEditAisle;
     private ToggleButton toggleDelete;
@@ -55,22 +56,34 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(manager);
         mAdapter = new GroceryAdapter(manager, getAllItems(), this);
         recyclerView.setAdapter(mAdapter);
+        mSwipeable = false;
 
         mAdapter.setOnItemClickListener(new GroceryAdapter.OnItemClickListener() {
             @Override
             public void onCheckBox(int position) {
-                addToTrolley(position);
+                toggleInTrolley(position); //indirectly tick the checkbox
             }
         });
 
         toggleDelete = findViewById(R.id.toggleButtonDeleteItem);
+        toggleDelete.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    Log.d(TAG, "toggleDelete is checked");
+                    mSwipeable = true; // make list swipeable
+                } else {
+                    Log.d(TAG, "toggleDelete is NOT checked");
+                    mSwipeable = false; // make list unswipeable
+                    saveAisles();
+                }
+            }
+        });
 
         toggleEditAisle = findViewById(R.id.toggleButtonEditSave);
         toggleEditAisle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     Log.d(TAG, "toggleEditAisle is checked");
-                    //makeListUneditable();
                 } else {
                     Log.d(TAG, "toggleEditAisle is NOT checked");
                     saveAisles();
@@ -95,6 +108,12 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             }
+
+            @Override
+            public boolean isItemViewSwipeEnabled() {
+                boolean swipeable = mSwipeable;
+                return swipeable;
+            }
         }).attachToRecyclerView(recyclerView);
 
         mEditTextName = findViewById(R.id.edittext_new_product);
@@ -109,8 +128,22 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void addToTrolley(int position) {
+    public void toggleInTrolley(int position) {
         String productName = mAdapter.getItemName(position);
+        ContentValues cv = new ContentValues();
+        Integer inTrolley = mAdapter.getInTrolleyValue(position);
+        if (inTrolley.equals(SQL_TRUE)) {
+            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
+        } else {
+            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_TRUE);
+        }
+
+        String[] mySelectionArgs = {productName};
+        Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+                cv,
+                GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
+                mySelectionArgs);
+        Log.d("MainActivity", "number of rows updated: " + numRowsUpdated);
         //maybe call swapCursor because getItemName changes the cursor position?
         mAdapter.swapCursor(getAllItems());
         //recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised)); //maybe call this?
@@ -128,22 +161,24 @@ public class MainActivity extends AppCompatActivity {
         String name = mEditTextName.getText().toString();
         String nameCapitalised = name.substring(0, 1).toUpperCase() + name.substring(1);
 
-        ContentValues cv = new ContentValues();
-        cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, nameCapitalised);
-        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_TRUE);
-        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
-
-        String[] mySelectionArgs = {nameCapitalised};
-        Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
-                cv,
-                GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
-                mySelectionArgs);
-        Log.d("MainActivity", "number of rows updated: " + String.valueOf(numRowsUpdated));
-        if (numRowsUpdated < 1) {
-            mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
+        if (!mAdapter.isItemInList(nameCapitalised)) {
+            Log.d(TAG, "item is not in list");
+            ContentValues cv = new ContentValues();
+            cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, nameCapitalised);
+            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_TRUE);
+            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
+            String[] mySelectionArgs = {nameCapitalised};
+            Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+                    cv,
+                    GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
+                    mySelectionArgs);
+            Log.d("MainActivity", "number of rows updated: " + String.valueOf(numRowsUpdated));
+            if (numRowsUpdated < 1) {
+                mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
+            }
+            mAdapter.swapCursor(getAllItems());
         }
 
-        mAdapter.swapCursor(getAllItems());
         mEditTextName.getText().clear();
         recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised));
     }
@@ -152,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
     private void removeItem(long id) {
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_FALSE);
+        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
         String[] mySelectionArgs = {String.valueOf(id)};
         //update(java.lang.String, android.content.ContentValues, java.lang.String, java.lang.String[])
         Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
@@ -182,7 +218,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateAisle(String aisleNumberStr, String productNameStr) {
         Log.d(TAG, "updateAisle() called");
-
         if (isDigitsOnly(aisleNumberStr) && (aisleNumberStr.length() > 0) && (productNameStr.length() > 0)) {
             ContentValues cv = new ContentValues();
             cv.put(currentColumnMarketAisles, Integer.parseInt(aisleNumberStr));
@@ -237,3 +272,21 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 }
+
+/* I can now toggle the swipe feature of deletion by pressing the delete button. Also, ticking the checkboxes
+make the inTrolley value toggle, which causes the checkbox to be ticked or not ticked.
+PROBLEM: when i try to add an item to a list that's already in the list and is ticked, it unticked that item,
+because I didn't check to see if the item was already in the list.
+POSSIBLE SOLUTION:
+1) when you add an item onto a list, don't do cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
+just let it be its default value or if it already exists, then it will be that already existing value. Which
+will be ticked if the item is already in the list and in the trolley, or if the item was removed from the
+list then it will be unticked because I untick it before removing it from a list.
+2) check if the item is already in the list - I tried this and the function isItemInList() causes bugs
+sometimes when the item is NOT in the list --> it accesses an index 1+ out of range.
+Future implementation:
+1) when the user adds an item to the list that has very similar spelling to another,
+make a window pop-up, saying that there already exists a record of [this other item]. Are they they the same?
+Which spelling is right?
+2) Autocompletion based on the items that already exist in database.
+ */

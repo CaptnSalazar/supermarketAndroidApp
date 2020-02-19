@@ -19,6 +19,8 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     private Context mContext;
     private Cursor mCursor;
     private OnItemClickListener mListener;
+    private Integer SQL_TRUE = 1;
+    private Integer SQL_FALSE = 0;
 
     public interface OnItemClickListener {
         /*An interface is a completely "abstract class" that is used to group related methods with empty bodies.
@@ -132,11 +134,35 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
 
+    public boolean isItemInList(String itemName) {
+        int position = 0;
+        int count = mCursor.getCount();
+        while (position < count){
+            mCursor.moveToPosition(position);
+            String nameOfCurrent = mCursor.getString(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
+            Integer inListOfCurrent = mCursor.getInt(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_LIST));
+            Log.d(TAG, "isItemInList, position is: " + position + ", name: " + nameOfCurrent + ", inList: " + inListOfCurrent);
+            if (SQL_TRUE.equals(inListOfCurrent) && itemName.equals(nameOfCurrent)) {
+                return true;
+            }
+            position++;
+        }
+        return false;
+    }
+
+
     public String getItemName(int position) {
         mCursor.moveToPosition(position);
         String nameOfItemChecked = mCursor.getString(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
         Log.d(TAG, "Inside addItemToTrolley(), product checked is: " + nameOfItemChecked);
         return nameOfItemChecked;
+    }
+
+    public Integer getInTrolleyValue(int position) {
+        mCursor.moveToPosition(position);
+        Integer isInTrolley = mCursor.getInt(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY));
+        Log.d(TAG, "Inside getInTrolleyValue(), WAS product in trolley? " + isInTrolley);
+        return isInTrolley;
     }
 
 
