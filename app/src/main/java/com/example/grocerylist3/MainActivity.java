@@ -1,14 +1,18 @@
 package com.example.grocerylist3;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.ContentValues;
+import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -37,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private Integer SQL_FALSE = 0;
 
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate() called");
@@ -54,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerview);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(manager);
-        mAdapter = new GroceryAdapter(manager, getAllItems(), this);
+        mAdapter = new GroceryAdapter(getAllItems(), this);
         recyclerView.setAdapter(mAdapter);
         mSwipeable = false;
 
@@ -80,12 +85,16 @@ public class MainActivity extends AppCompatActivity {
         });
 
         toggleEditAisle = findViewById(R.id.toggleButtonEditSave);
+        toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("green")));
         toggleEditAisle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
                     Log.d(TAG, "toggleEditAisle is checked");
+                    toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("red")));
                 } else {
                     Log.d(TAG, "toggleEditAisle is NOT checked");
+                    toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("green")));
                     saveAisles();
                 }
             }
@@ -278,19 +287,17 @@ public class MainActivity extends AppCompatActivity {
     }
 }
 
-/* I can now toggle the swipe feature of deletion by pressing the delete button. Also, ticking the checkboxes
-make the inTrolley value toggle, which causes the checkbox to be ticked or not ticked.
-Solved PROBLEM: when i try to add an item to a list that's already in the list and is ticked, it unticked that item,
-because I didn't check to see if the item was already in the list.
-SOLUTION: When you add an item onto a list, don't do cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
-just let it be its default value or if it already exists, then it will be that already existing value. Which
-will be ticked if the item is already in the list and in the trolley, or if the item was removed from the
-list then it will be unticked because I untick it before removing it from a list.
+/*
 Future implementation:
-1) when the user adds an item to the list that has very similar spelling to another,
-make a window pop-up, saying that there already exists a record of [this other item]. Are they they the same?
-Which spelling is right?
+0) For the spinner, just make a list from the database in the onCreate() method of main, and update
+that list every time a new item is added. Also, add a column to SQL_CREATE_SUPERMARKETS_VISITED_TABLE
+which has a value true/1 or false/0 that tells you whether that market is selected, otherwise the app
+will reset back to the default market every time you close and open it.
+1) Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
 2) Autocompletion based on the items that already exist in database.
 3) Make the Edit List button glow or point to it, when someone tries to do other things while in Edit mode.
-4) Make the EditTexts of the list not allow keyboard pop up when you click on them..
+4) when the user adds an item to the list that has very similar spelling to another,
+make a window pop-up, saying that there already exists a record of [this other item]. Are they they the same?
+Which spelling is right?
+5) Make background thread (see your java google docs for link)
  */

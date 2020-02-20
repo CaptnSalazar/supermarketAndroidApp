@@ -10,12 +10,10 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.GroceryViewHolder> {
     private static final String TAG = "GrocerAdaptr*<*<*<*<*<*";
-    private LinearLayoutManager mManager;
     private Context mContext;
     private Cursor mCursor;
     private OnItemClickListener mListener;
@@ -36,9 +34,8 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
 
-    public GroceryAdapter(LinearLayoutManager manager, Cursor cursor, Context context) {
+    public GroceryAdapter(Cursor cursor, Context context) {
         Log.d(TAG, "GroceryAdapter() called");
-        mManager = manager;
         mContext = context;
         mCursor = cursor;
     }
