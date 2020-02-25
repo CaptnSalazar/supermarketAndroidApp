@@ -97,10 +97,24 @@
 
     <Spinner
         android:id="@+id/spinner"
-        android:layout_width="match_parent"
+        android:layout_width="320dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_toEndOf="@+id/buttonEditSpinner"
+        android:layout_toRightOf="@+id/buttonEditSpinner" />
+
+    <Button
+        android:id="@+id/buttonEditSpinner"
+        android:layout_width="57dp"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
-        android:layout_marginTop="8dp" />
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:onClick="onEditSpinner"
+        android:text="Edit" />
 </RelativeLayout>

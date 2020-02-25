@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.ContentValues;
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -16,12 +17,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.ToggleButton;
 
 import com.google.android.material.snackbar.Snackbar;
+
+import java.util.List;
 
 import static android.text.TextUtils.isDigitsOnly;
 
@@ -35,6 +40,10 @@ public class MainActivity extends AppCompatActivity {
     private EditText mEditTextName;
     private ToggleButton toggleEditAisle;
     private ToggleButton toggleDelete;
+
+    Spinner spinner;
+    List<Market> spinnerMarketArray;
+    ArrayAdapter<Market> spinnerArrayAdapter;
 
     private String currentColumnMarketAisles = GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE;
     private Integer SQL_TRUE = 1;
@@ -51,17 +60,21 @@ public class MainActivity extends AppCompatActivity {
         GroceryDBHelper dbHelper = new GroceryDBHelper(this);
         mDatabase = dbHelper.getWritableDatabase();
 
-        /*recyclerView = findViewById(R.id.recyclerview);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mAdapter = new GroceryAdapter(this, getAllItems());
-        recyclerView.setAdapter(mAdapter);
-        Changed the 4 lines above to the following: */
         recyclerView = findViewById(R.id.recyclerview);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(manager);
         mAdapter = new GroceryAdapter(getAllItems(), this);
         recyclerView.setAdapter(mAdapter);
         mSwipeable = false;
+
+        Intent intent = getIntent();
+        String messageNewMarket = intent.getStringExtra(EditSuperMarketsInfo.EXTRA_MESSAGE_MARKET_INFO);
+        //If we didn't check this, then the app would crash when it started.
+        if (messageNewMarket != null) {
+            Log.d(TAG, "onCreate: the new market is: " + messageNewMarket);
+            addMarket(messageNewMarket);
+
+        }
 
         mAdapter.setOnItemClickListener(new GroceryAdapter.OnItemClickListener() {
             @Override
@@ -120,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public boolean isItemViewSwipeEnabled() {
-                boolean swipeable = mSwipeable;
+                boolean swipeable = mSwipeable; //swipeable says it's redundant but causes problems if you just use mSwipeable.
                 return swipeable;
             }
         }).attachToRecyclerView(recyclerView);
@@ -140,6 +153,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
 
 
     public void toggleInTrolley(int position) {
@@ -164,6 +178,19 @@ public class MainActivity extends AppCompatActivity {
 
         mAdapter.swapCursor(getAllItems());
         //recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised)); //maybe call this?
+    }
+
+    private void addMarket(String newMarket) {
+        if (mEditTextName.getText().toString().trim ().length() == 0) {
+            return;
+        }
+
+        ContentValues cv = new ContentValues();
+        cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME, newMarket);
+        cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION, "Temporary Location");
+        cv.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_TRUE);
+        mDatabase.insert(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET, null, cv);
+        mAdapter.swapCursor(getAllItems());
     }
 
 
@@ -264,6 +291,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void onEditSpinner(View view) {
+        Intent intent = new Intent(this, EditSuperMarketsInfo.class);
+        startActivity(intent);
+    }
+
+
     public void onDeleteAllRows(View view) {
         Log.d(TAG, "onDeleteAllRows() called");
         mDatabase.execSQL("DELETE FROM " + GroceryContract.GroceryEntry.TABLE_NAME);
@@ -289,10 +322,15 @@ public class MainActivity extends AppCompatActivity {
 
 /*
 Future implementation:
-0) For the spinner, just make a list from the database in the onCreate() method of main, and update
+0.2) For the spinner, just make a list from the database in the onCreate() method of main, and update
 that list every time a new item is added. Also, add a column to SQL_CREATE_SUPERMARKETS_VISITED_TABLE
 which has a value true/1 or false/0 that tells you whether that market is selected, otherwise the app
 will reset back to the default market every time you close and open it.
+0.5) When you press "Edit Spinner", a window pops up (OR MAYBE WE START ANOTHER ACTIVITY??) that has a "negative" button/option of "change name", and
+a "positive" button/option of "add new". If you press change name, a picker pops up for you to select/find the
+market name you wanna change and 2 editTexts one above the other appear with text to their left saying
+"Location" with editText hint "e.g. Ilam Road", and "Company" with editText hint "e.g. Countdown", and
+two buttons/options, "cancel" and "confirm".
 1) Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
 2) Autocompletion based on the items that already exist in database.
 3) Make the Edit List button glow or point to it, when someone tries to do other things while in Edit mode.
