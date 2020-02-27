@@ -258,16 +258,17 @@ public class MainActivity extends AppCompatActivity {
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_FALSE);
 
+        String[] selectionArgsForSelectedMarket = {selectedMarketName};
         Integer numRowsUpdated = mDatabase.update(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                 cv,
-                null,
-                null);
+                "NOT " + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =?", //practically unnecessary in this context but I wanna learn SQL
+                selectionArgsForSelectedMarket);
         Log.d(TAG, "updateTableSelectedMarket:  number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
 
         ContentValues cvOfSelectedMarket = new ContentValues();
         cvOfSelectedMarket.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_TRUE);
 
-        String[] selectionArgsForSelectedMarket = {selectedMarketName};
+
         Integer numRowsUpdated2 = mDatabase.update(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                 cvOfSelectedMarket,
                 GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =?",
@@ -455,8 +456,10 @@ public class MainActivity extends AppCompatActivity {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                Log.d(TAG, "onItemSelected: Call a function that changes the 'CurrentMarket' column " +
-                        "(which you will probably need to the Supermarkets table) to true/1.");
+                String selectedMarketName = parent.getItemAtPosition(position).toString();
+                Log.d(TAG, "onItemSelected:  updating table so that only " + selectedMarketName +
+                        " has true value of IsSelected");
+                updateTableSelectedMarket(selectedMarketName);
             }
 
             @Override
