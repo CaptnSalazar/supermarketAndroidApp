@@ -2,6 +2,7 @@ package com.example.grocerylist3;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +20,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     private static final String TAG = "GrocerAdaptr*<*<*<*<*<*";
     private Context mContext;
     private Cursor mCursorGrocery;
-    private Cursor mCursorMarket;
+    //private Cursor mCursorMarket;
     private OnItemClickListener mListener;
     private int positionMarketSelected;
 
@@ -39,11 +40,11 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
 
-    public GroceryAdapter(Cursor cursorGrocery, Cursor cursorMarket, Context context) {
+    public GroceryAdapter(Cursor cursorGrocery, Context context) {
         Log.d(TAG, "GroceryAdapter() called");
         mContext = context;
         mCursorGrocery = cursorGrocery;
-        mCursorMarket = cursorMarket;
+        //mCursorMarket = cursorMarket;
     }
 
 
@@ -114,7 +115,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         return mCursorGrocery.getCount();
     }
 
-    public int getMarketCount() { return mCursorMarket.getCount(); }
+    //public int getMarketCount() { return mCursorMarket.getCount(); }
 
 
     private boolean integerToBoolean(Integer number) {
@@ -154,8 +155,9 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
 
-    public List<Market> getMarketList() {
+    public List<Market> getMarketList(SQLiteDatabase database) {
         Log.d(TAG, "getMarketList: ");
+        Cursor mCursorMarket = getAllSupermarkets(database);
         List<Market> newSpinnerArray = new ArrayList<Market>();
         //iterate through all rows and append the name/location and ID to Market list.
         boolean moveSucceeded = mCursorMarket.moveToFirst();
@@ -177,6 +179,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
             moveSucceeded = mCursorMarket.moveToNext();
         }
         Log.d(TAG, "getMarketList:  F I N I S H E D !!!");
+        mCursorMarket.close();
         return newSpinnerArray;
     }
 
@@ -187,10 +190,24 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
 
+    private Cursor getAllSupermarkets(SQLiteDatabase database) {
+        Log.d(TAG, "getAllSupermarkets() called");
+        return database.query(
+                GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
+                null,
+                null,
+                null,
+                null,
+                null,
+                GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " ASC, " + GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " ASC"
+        );
+    }
+
+
     public void closeAllCursors() {
-        if (mCursorMarket != null) {
-            mCursorMarket.close(); //close and get rid of cursor
-        }
+//        if (mCursorMarket != null) {
+//            mCursorMarket.close(); //close and get rid of cursor
+//        }
         if (mCursorGrocery != null) {
             mCursorGrocery.close(); //close and get rid of cursor
         }
@@ -198,7 +215,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
 
 
     public boolean areAllCursorsClosed() {
-        return mCursorGrocery.isClosed() && mCursorMarket.isClosed();
+        return mCursorGrocery.isClosed(); // && mCursorMarket.isClosed();
     }
 
 
@@ -214,16 +231,4 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         }
     }
 
-
-    //every time we update database, we have to pass a new cursor..
-    public void swapCursorMarket(Cursor newCursor) {
-        if (mCursorMarket != null) {
-            mCursorMarket.close(); //close and get rid of cursor
-        }
-
-        mCursorMarket = newCursor;
-        if (newCursor != null) {
-            notifyDataSetChanged(); //update recyclerview
-        }
-    }
 }

@@ -67,7 +67,8 @@ public class MainActivity extends AppCompatActivity {
         LinearLayoutManager manager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(manager);
         //mAdapter = new GroceryAdapter(getAllItems(), this);
-        mAdapter = new GroceryAdapter(getAllItems(), getAllSupermarkets(), this);
+        //mAdapter = new GroceryAdapter(getAllItems(), getAllSupermarkets(), this);
+        mAdapter = new GroceryAdapter(getAllItems(), this);
         recyclerView.setAdapter(mAdapter);
         mSwipeable = false;
 
@@ -96,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
         // Get a Spinner and bind it to an ArrayAdapter that
         // references an array (eg a String array or a array of custom objects).
 
-        spinnerMarketArray = mAdapter.getMarketList();
+        spinnerMarketArray = mAdapter.getMarketList(mDatabase);
         //spinnerMarketArray = new ArrayList<Market>();
 
         spinner = findViewById(R.id.spinner);
@@ -136,9 +137,9 @@ public class MainActivity extends AppCompatActivity {
         mDatabase.execSQL("DELETE FROM " + GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET);
 
         mAdapter.swapCursorGrocery(getAllItems());
-        mAdapter.swapCursorMarket(getAllSupermarkets());
+        //mAdapter.swapCursorMarket(getAllSupermarkets());
 
-        spinnerMarketArray = mAdapter.getMarketList();
+        spinnerMarketArray = mAdapter.getMarketList(mDatabase);
         //these thee statements are needed for spinner to refresh.
         spinnerArrayAdapter = new ArrayAdapter<Market> (this,
                 android.R.layout.simple_spinner_item, //the spinner itself will look like this (no radio buttons).
@@ -223,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
         EditText editTextName = findViewById(R.id.editTextName);
         String newMarketName = editTextName.getText().toString();
         addMarketToTable(newMarketName);
-        spinnerMarketArray = mAdapter.getMarketList(); //not efficient way of adding Market but this won't be done often.
+        spinnerMarketArray = mAdapter.getMarketList(mDatabase); //not efficient way of adding Market but this won't be done often.
 
         setLayoutEditSpinner();
 
@@ -249,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_TRUE);
         mDatabase.insert(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET, null, cv);
         updateTableSelectedMarket(newMarket);
-        mAdapter.swapCursorMarket(getAllSupermarkets());
+        //mAdapter.swapCursorMarket(getAllSupermarkets(mDatabase));
     }
 
 
@@ -480,19 +481,6 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-
-    private Cursor getAllSupermarkets() {
-        Log.d(TAG, "getAllSupermarkets() called");
-        return mDatabase.query(
-                GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
-                null,
-                null,
-                null,
-                null,
-                null,
-                GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " ASC, " + GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " ASC"
-        );
-    }
 }
 
 /*
