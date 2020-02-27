@@ -6,21 +6,22 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.Spinner;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.GroceryViewHolder> {
     private static final String TAG = "GrocerAdaptr*<*<*<*<*<*";
     private Context mContext;
-    private Cursor mCursor;
+    private Cursor mCursorGrocery;
+    private Cursor mCursorMarket;
     private OnItemClickListener mListener;
+    private int positionMarketSelected;
 
 
     public interface OnItemClickListener {
@@ -38,10 +39,11 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
 
-    public GroceryAdapter(Cursor cursor, Context context) {
+    public GroceryAdapter(Cursor cursorGrocery, Cursor cursorMarket, Context context) {
         Log.d(TAG, "GroceryAdapter() called");
         mContext = context;
-        mCursor = cursor;
+        mCursorGrocery = cursorGrocery;
+        mCursorMarket = cursorMarket;
     }
 
 
@@ -85,14 +87,14 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     @Override
     public void onBindViewHolder(@NonNull GroceryViewHolder holder, int position) {
         Log.d(TAG, "onBindViewHolder() called");
-        if (!mCursor.moveToPosition(position)) {
+        if (!mCursorGrocery.moveToPosition(position)) {
             return;
         }
 
-        String name = mCursor.getString(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
-        Integer aisle = mCursor.getInt(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE));
-        Integer isInTrolley = mCursor.getInt(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY));
-        long id = mCursor.getLong(mCursor.getColumnIndex(GroceryContract.GroceryEntry._ID));
+        String name = mCursorGrocery.getString(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
+        Integer aisle = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE));
+        Integer isInTrolley = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY));
+        long id = mCursorGrocery.getLong(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry._ID));
 
         holder.nameText.setText(name);
         holder.checkBox.setChecked(integerToBoolean(isInTrolley));
@@ -108,8 +110,11 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
 
     @Override
     public int getItemCount() {
-        return mCursor.getCount();
+        //This returns the total number of rows, not the number of rows currently in the list.
+        return mCursorGrocery.getCount();
     }
+
+    public int getMarketCount() { return mCursorMarket.getCount(); }
 
 
     private boolean integerToBoolean(Integer number) {
@@ -124,9 +129,9 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     public Integer getItemPosition(String itemName) {
         Integer position = 0;
         //since we know we just added this item to the list, moveToNext() will never return null
-        for (mCursor.moveToFirst();
-             !itemName.equals(mCursor.getString(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME)));
-             mCursor.moveToNext()) {
+        for (mCursorGrocery.moveToFirst();
+             !itemName.equals(mCursorGrocery.getString(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME)));
+             mCursorGrocery.moveToNext()) {
             position++;
         }
         Log.d(TAG, "Inside NewItemPosition, position is: " + position);
@@ -135,27 +140,88 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
 
 
     public String getItemName(int position) {
-        mCursor.moveToPosition(position);
-        String nameOfItemChecked = mCursor.getString(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
+        mCursorGrocery.moveToPosition(position);
+        String nameOfItemChecked = mCursorGrocery.getString(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
         Log.d(TAG, "Inside addItemToTrolley(), product checked is: " + nameOfItemChecked);
         return nameOfItemChecked;
     }
 
     public Integer getInTrolleyValue(int position) {
-        mCursor.moveToPosition(position);
-        Integer isInTrolley = mCursor.getInt(mCursor.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY));
+        mCursorGrocery.moveToPosition(position);
+        Integer isInTrolley = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY));
         Log.d(TAG, "Inside getInTrolleyValue(), WAS product in trolley? " + isInTrolley);
         return isInTrolley;
     }
 
 
+    public List<Market> getMarketList() {
+        Log.d(TAG, "getMarketList: ");
+        List<Market> newSpinnerArray = new ArrayList<Market>();
+        //iterate through all rows and append the name/location and ID to Market list.
+        boolean moveSucceeded = mCursorMarket.moveToFirst();
+        int position = 0;
+        while (moveSucceeded) {
+            Log.d(TAG, "getMarketList:       " + position + "th iteration of while loop.");
+            String marketName = mCursorMarket.getString(mCursorMarket.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME));
+            String marketLocation = mCursorMarket.getString(mCursorMarket.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION));
+            Integer marketID = mCursorMarket.getInt(mCursorMarket.getColumnIndex(GroceryContract.SupermarketsVisited._ID));
+            boolean marketIsSelected = integerToBoolean(mCursorMarket.getInt(mCursorMarket.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED)));
+            Market market = new Market(marketName, marketLocation , marketID, marketIsSelected);
+            newSpinnerArray.add(market);
+            if (marketIsSelected) {
+                positionMarketSelected = position;
+                Log.d(TAG, "getMarketList:  market" + marketName + " is selected and has position: " + positionMarketSelected);
+            }
+            Log.d(TAG, "getMarketList: marketName: " + marketName);
+            position++;
+            moveSucceeded = mCursorMarket.moveToNext();
+        }
+        Log.d(TAG, "getMarketList:  F I N I S H E D !!!");
+        return newSpinnerArray;
+    }
+
+
+    public int getPositionMarketSelected() {
+        Log.d(TAG, "getPositionMarketSelected:   position of marketSelected is " + positionMarketSelected);
+        return positionMarketSelected;
+    }
+
+
+    public void closeAllCursors() {
+        if (mCursorMarket != null) {
+            mCursorMarket.close(); //close and get rid of cursor
+        }
+        if (mCursorGrocery != null) {
+            mCursorGrocery.close(); //close and get rid of cursor
+        }
+    }
+
+
+    public boolean areAllCursorsClosed() {
+        return mCursorGrocery.isClosed() && mCursorMarket.isClosed();
+    }
+
+
     //every time we update database, we have to pass a new cursor..
-    public void swapCursor(Cursor newCursor) {
-        if (mCursor != null) {
-            mCursor.close(); //close and get rid of cursor
+    public void swapCursorGrocery(Cursor newCursor) {
+        if (mCursorGrocery != null) {
+            mCursorGrocery.close(); //close and get rid of cursor
         }
 
-        mCursor = newCursor;
+        mCursorGrocery = newCursor;
+        if (newCursor != null) {
+            notifyDataSetChanged(); //update recyclerview
+        }
+    }
+
+
+    //every time we update database, we have to pass a new cursor..
+    public void swapCursorMarket(Cursor newCursor) {
+        if (mCursorMarket != null) {
+            mCursorMarket.close(); //close and get rid of cursor
+        }
+
+        mCursorMarket = newCursor;
         if (newCursor != null) {
             notifyDataSetChanged(); //update recyclerview
         }

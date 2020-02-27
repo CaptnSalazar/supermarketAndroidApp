@@ -12,7 +12,7 @@
         android:id="@+id/edittext_new_product"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/spinner"
+        android:layout_below="@+id/buttonEditSpinner"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_marginStart="8dp"
@@ -31,12 +31,13 @@
         android:id="@+id/button_add"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/spinner"
+        android:layout_below="@+id/buttonEditSpinner"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
+        android:onClick="onAddItem"
         android:text="@string/add_new_item" />
 
     <androidx.recyclerview.widget.RecyclerView
@@ -97,6 +98,7 @@
 
     <Spinner
         android:id="@+id/spinner"
+        style="@android:style/Widget.Holo.Light.Spinner"
         android:layout_width="320dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -117,4 +119,80 @@
         android:layout_marginLeft="8dp"
         android:onClick="onEditSpinner"
         android:text="Edit" />
+
+    <TextView
+        android:id="@+id/textViewName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toggleButtonDeleteItem"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginStart="56dp"
+        android:layout_marginLeft="56dp"
+        android:layout_marginTop="27dp"
+        android:textSize="25dp"
+        tools:text="Name:"
+        android:visibility="gone" />
+
+    <EditText
+        android:id="@+id/editTextName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toggleButtonDeleteItem"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginStart="28dp"
+        android:layout_marginLeft="28dp"
+        android:layout_marginTop="22dp"
+        android:layout_marginEnd="37dp"
+        android:layout_marginRight="37dp"
+        android:layout_toEndOf="@+id/textViewName"
+        android:layout_toRightOf="@+id/textViewName"
+        android:ems="10"
+        android:hint="@string/supermarket_example"
+        android:inputType="textPersonName"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/buttonCancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editTextName"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="9dp"
+        android:layout_marginRight="9dp"
+        android:layout_toStartOf="@+id/buttonConfirm"
+        android:layout_toLeftOf="@+id/buttonConfirm"
+        android:onClick="onCancel"
+        android:text="Cancel"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/buttonConfirm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editTextName"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="107dp"
+        android:layout_marginRight="107dp"
+        android:onClick="onConfirm"
+        android:text="Confirm"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/textViewSpinnerEmpty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_toEndOf="@+id/buttonEditSpinner"
+        android:layout_toRightOf="@+id/buttonEditSpinner"
+        android:text="Add a new market"
+        android:textSize="25dp" />
 </RelativeLayout>
