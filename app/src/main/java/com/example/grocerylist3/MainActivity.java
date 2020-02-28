@@ -26,8 +26,7 @@ import android.widget.ToggleButton;
 
 import com.google.android.material.snackbar.Snackbar;
 
-import java.util.ArrayList;
-import java.util.Collections;
+
 import java.util.List;
 
 import static android.text.TextUtils.isDigitsOnly;
@@ -183,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
         cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_TRUE);
         //cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
         String[] mySelectionArgs = {nameCapitalised};
-        Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+        int numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
                 cv,
                 GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
                 mySelectionArgs);
@@ -215,15 +214,20 @@ public class MainActivity extends AppCompatActivity {
     public void onConfirm(View view) {
         Log.d(TAG, "onConfirm: ");
 
-        if (spinnerMarketArray.size() == 0) {  //if we are adding item for the first time.
+
+
+        EditText editTextName = findViewById(R.id.editTextMarketName);
+        String newMarketName = editTextName.getText().toString().trim();
+        EditText editTextLocation = findViewById(R.id.editTextMarketLocation);
+        String newMarketLocation = editTextLocation.getText().toString().trim();
+
+        if ((spinnerMarketArray.size() == 0) && (newMarketName.length() > 0) && (newMarketLocation.length() > 0)) {  //if we are adding item for the first time.
             TextView textViewSpinnerEmpty = findViewById(R.id.textViewSpinnerEmpty);
             textViewSpinnerEmpty.setVisibility(View.GONE);
             spinner.setVisibility(View.VISIBLE);
         }
 
-        EditText editTextName = findViewById(R.id.editTextName);
-        String newMarketName = editTextName.getText().toString();
-        addMarketToTable(newMarketName);
+        addMarketToTable(newMarketName, newMarketLocation);
         spinnerMarketArray = mAdapter.getMarketList(mDatabase); //not efficient way of adding Market but this won't be done often.
 
         setLayoutEditSpinner();
@@ -234,44 +238,44 @@ public class MainActivity extends AppCompatActivity {
                 spinnerMarketArray); //selected item will look like a spinner set from XML.
         spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); //each item in the spinner will look like this when you click the spinner (with radio buttons).
         spinner.setAdapter(spinnerArrayAdapter);
-        spinner.setSelection(mAdapter.getPositionMarketSelected()); //DOESN'T WORK PROPERLY: getPositionMarketSelected DOESN'T SET PREVIOUSLY SELECTED MARKET TO FALSE
+        spinner.setSelection(mAdapter.getPositionMarketSelected());
     }
 
 
-    private void addMarketToTable(String newMarket) {
+    private void addMarketToTable(String newMarketName, String newMarketLocation) {
         Log.d(TAG, "addMarketToTable: ");
-        if (newMarket.trim().length() == 0) {
+        if ((newMarketName.trim().length() == 0) || (newMarketLocation.trim().length() == 0)) {
             return;
         }
 
         ContentValues cv = new ContentValues();
-        cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME, newMarket);
-        cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION, "Temporary Location");
+        cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME, newMarketName);
+        cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION, newMarketLocation);
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_TRUE);
         mDatabase.insert(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET, null, cv);
-        updateTableSelectedMarket(newMarket);
+        updateTableSelectedMarket(newMarketName, newMarketLocation);
         //mAdapter.swapCursorMarket(getAllSupermarkets(mDatabase));
     }
 
 
-    private void updateTableSelectedMarket(String selectedMarketName) {
+    private void updateTableSelectedMarket(String selectedMarketName, String selectedMarketLocation) {
+        Log.d(TAG, "updateTableSelectedMarket: making isSelected true in only " + selectedMarketName + " (" + selectedMarketLocation + ")");
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_FALSE);
-
-        String[] selectionArgsForSelectedMarket = {selectedMarketName};
-        Integer numRowsUpdated = mDatabase.update(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
+        String[] selectionArgsForSelectedMarket = {selectedMarketName , selectedMarketLocation};
+        int numRowsUpdated = mDatabase.update(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                 cv,
-                "NOT " + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =?", //practically unnecessary in this context but I wanna learn SQL
+                "NOT " + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? OR NOT " +
+                        GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?", //practically unnecessary in this context but I wanna learn SQL
                 selectionArgsForSelectedMarket);
         Log.d(TAG, "updateTableSelectedMarket:  number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
 
         ContentValues cvOfSelectedMarket = new ContentValues();
         cvOfSelectedMarket.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_TRUE);
-
-
-        Integer numRowsUpdated2 = mDatabase.update(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
+        int numRowsUpdated2 = mDatabase.update(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                 cvOfSelectedMarket,
-                GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =?",
+                GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
+                        GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?",
                 selectionArgsForSelectedMarket);
         Log.d(TAG, "updateTableSelectedMarket:  number of rows updated: " + numRowsUpdated2); //Integer is automatically converted to String if needed
 
@@ -282,23 +286,35 @@ public class MainActivity extends AppCompatActivity {
         mIsSpinnerBeingEdited = !mIsSpinnerBeingEdited; //toggle mIsSpinnerBeingEdited
 
         Button buttonEditSpinner = findViewById(R.id.buttonEditSpinner);
-        EditText editTextName = findViewById(R.id.editTextName);
+        TextView textViewName = findViewById(R.id.textViewMarketName);
+        EditText editTextName = findViewById(R.id.editTextMarketName);
+        TextView textViewLocation = findViewById(R.id.textViewMarketLocation);
+        EditText editTextLocation = findViewById(R.id.editTextMarketLocation);
         Button confirmButton = findViewById(R.id.buttonConfirm);
         Button cancelButton = findViewById(R.id.buttonCancel);
 
         if (mIsSpinnerBeingEdited) {
-            buttonEditSpinner.setText("Back");
+            buttonEditSpinner.setText(getString(R.string.spinner_edit_back));
+            textViewName.setVisibility(View.VISIBLE);
             editTextName.setVisibility(View.VISIBLE);
+            textViewLocation.setVisibility(View.VISIBLE);
+            editTextLocation.setVisibility(View.VISIBLE);
             confirmButton.setVisibility(View.VISIBLE);
             cancelButton.setVisibility(View.VISIBLE);
             recyclerView.setVisibility(View.GONE);
         } else {
-            editTextName.getText().clear();
-            buttonEditSpinner.setText("Edit");
+            buttonEditSpinner.setText(getString(R.string.spinner_edit));
+            textViewName.setVisibility(View.GONE);
+            editTextName.setVisibility(View.GONE);
+            textViewLocation.setVisibility(View.GONE);
+            editTextLocation.setVisibility(View.GONE);
             editTextName.setVisibility(View.GONE);
             confirmButton.setVisibility(View.GONE);
             cancelButton.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
+
+            editTextName.getText().clear();
+            editTextLocation.getText().clear();
         }
     }
 
@@ -324,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
                 cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_TRUE);
             }
             String[] mySelectionArgs = {productName};
-            Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+            int numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
                     cv,
                     GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
                     mySelectionArgs);
@@ -398,7 +414,7 @@ public class MainActivity extends AppCompatActivity {
             cv.put(currentColumnMarketAisles, Integer.parseInt(aisleNumberStr));
 
             String[] mySelectionArgs = {productNameStr};
-            Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+            int numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
                     cv,
                     GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
                     mySelectionArgs);
@@ -443,7 +459,7 @@ public class MainActivity extends AppCompatActivity {
         cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
         String[] mySelectionArgs = {String.valueOf(id)};
         //update(java.lang.String, android.content.ContentValues, java.lang.String, java.lang.String[])
-        Integer numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+        int numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
                 cv,
                 GroceryContract.GroceryEntry._ID + " =?",
                 mySelectionArgs);
@@ -456,10 +472,13 @@ public class MainActivity extends AppCompatActivity {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedMarketName = parent.getItemAtPosition(position).toString();
-                Log.d(TAG, "onItemSelected:  updating table so that only " + selectedMarketName +
+                String selectedMarket = parent.getItemAtPosition(position).toString();
+                Log.d(TAG, "onItemSelected:  updating table so that only " + selectedMarket +
                         " has true value of IsSelected");
-                updateTableSelectedMarket(selectedMarketName);
+                String[] marketInfo = Market.extractNameAndLocation(selectedMarket);
+                //MAKE SURE THE USER CANNOT INPUT '(' AS IN MARKET NAME OR LOCATION OTHERWISE THIS WILL HAVE BUGS.
+                Log.d(TAG, "onItemSelected:  market name is " + marketInfo[0] + ", and location is: " + marketInfo[1]);
+                updateTableSelectedMarket(marketInfo[0], marketInfo[1]);
             }
 
             @Override
@@ -484,39 +503,43 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+    /*
+    PROBLEM: when you do any sequence of activities followed by clicking on the empty spinner (i.e.
+    before adding a market or after pressing "Delete All") everything freezes. But if you press "Edit Spinner" and
+    add a market to it, then everything works as expected.
+    SOLUTION: make the spinner be gone when it is empty.
+    */
+
+    /*
+    WHEN EDIT SPINNER BUTTON IS PRESSED, WE SOMETIMES (IT DOESN'T ALWAYS HAPPENS, SO TRY MULTIPLE TIMES,
+    ABOUT 4 USUALLY MAKES THE MESSAGE APPEAR) GET "A resource failed to call close" ONCE, AND I DON'T
+    KNOW WHY BECAUSE I CLOSE THE CURSORS BEFORE GOING TO THE OTHER ACTIVITY. I think the problem might
+    actually >>>not be caused by the cursor<<< and may be caused by other things to do with the activity.
+    So, learn how to check if there is a memory leak (which is caused when you don't close a resource and
+    the gargabe collector can't release that unused resource because it has no reference to it).
+    --I think android wants me to close the cursor after onBindViewHolder. <<<NO! this makes it crash.
+    >>>>>>>>>>>>>>
+    >>>>> E A S I E S T  SOLUTION: DON'T MAKE ANOTHER ACTIVITY, JUST HIDE THE RECYCLERVIEW AND DISPLAY TWO<<<<<<<
+    >>>>> OTHER HARDER POSSIBLE SOLUTION:  ANDROID WANTED ME TO CLOSE THE DATABASE ITSELF mDatabase.close() <<<<<<<<<<
+    */
+
+    /*
+    Future implementations:
+    0.5) When you press "Edit Spinner", a window pops up (OR MAYBE WE START ANOTHER ACTIVITY??) that has a "negative" button/option of "change name", and
+    a "positive" button/option of "add new". If you press change name, a picker pops up for you to select/find the
+    market name you wanna change and 2 editTexts one above the other appear with text to their left saying
+    "Location" with editText hint "e.g. Ilam Road", and "Company" with editText hint "e.g. Countdown", and
+    two buttons/options, "cancel" and "confirm".
+    NOTE: not sure if I should make it so that when an aisle editText loses focus you check if it was changed because a
+    person might butt type or whatever, although that's unlikely, and the program (will) expect a reasonable.
+    1) Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
+    2) Autocompletion based on the items that already exist in database.
+    3) Make the Edit List button glow or point to it, when someone tries to do other things while in Edit mode.
+    4) when the user adds an item to the list that has very similar spelling to another,
+    make a window pop-up, saying that there already exists a record of [this other item]. Are they they the same?
+    Which spelling is right?
+    5) Make background thread (see your java google docs for link)
+     */
+
 }
 
-/*
-PROBLEM: when you do any sequence of activities followed by clicking on the empty spinner (i.e.
-before adding a market or after pressing "Delete All") everything freezes. But if you press "Edit Spinner" and
-add a market to it, then everything works as expected.
-SOLUTION: make the spinner be gone when it is empty.
-
-Future implementation:
-WHEN EDIT SPINNER BUTTON IS PRESSED, WE SOMETIMES (IT DOESN'T ALWAYS HAPPENS, SO TRY MULTIPLE TIMES,
-ABOUT 4 USUALLY MAKES THE MESSAGE APPEAR) GET "A resource failed to call close" ONCE, AND I DON'T
-KNOW WHY BECAUSE I CLOSE THE CURSORS BEFORE GOING TO THE OTHER ACTIVITY. I think the problem might
-actually >>>not be caused by the cursor<<< and may be caused by other things to do with the activity.
-So, learn how to check if there is a memory leak (which is caused when you don't close a resource and
-the gargabe collector can't release that unused resource because it has no reference to it).
---I think android wants me to close the cursor after onBindViewHolder. <<<NO! this makes it crash.
->>>>>>>>>>>>>>
->>>>> E A S I E S T  SOLUTION: DON'T MAKE ANOTHER ACTIVITY, JUST HIDE THE RECYCLERVIEW AND DISPLAY TWO<<<<<<<
->>>>> OTHER HARDER POSSIBLE SOLUTION:  ANDROID WANTED ME TO CLOSE THE DATABASE ITSELF mDatabase.close() <<<<<<<<<<
-
-
-0.5) When you press "Edit Spinner", a window pops up (OR MAYBE WE START ANOTHER ACTIVITY??) that has a "negative" button/option of "change name", and
-a "positive" button/option of "add new". If you press change name, a picker pops up for you to select/find the
-market name you wanna change and 2 editTexts one above the other appear with text to their left saying
-"Location" with editText hint "e.g. Ilam Road", and "Company" with editText hint "e.g. Countdown", and
-two buttons/options, "cancel" and "confirm".
-NOTE: not sure if I should make it so that when an aisle editText loses focus you check if it was changed because a
-person might butt type or whatever, although that's unlikely, and the program (will) expect a reasonable.
-1) Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
-2) Autocompletion based on the items that already exist in database.
-3) Make the Edit List button glow or point to it, when someone tries to do other things while in Edit mode.
-4) when the user adds an item to the list that has very similar spelling to another,
-make a window pop-up, saying that there already exists a record of [this other item]. Are they they the same?
-Which spelling is right?
-5) Make background thread (see your java google docs for link)
- */
