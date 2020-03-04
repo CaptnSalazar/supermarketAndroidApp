@@ -54,7 +54,7 @@ public class Market {
 
     static public String[] extractNameAndLocation(String nameWithLocation) {
         //MAKE SURE THE USER CANNOT INPUT '(' AS IN MARKET NAME OR LOCATION OTHERWISE THIS WILL HAVE BUGS.
-        Log.d(TAG, "extractNameAndLocation: ");
+        //Log.d(TAG, "extractNameAndLocation: ");
         //by using double quotes you create String constant ("p"), while with single quotes it's a char constant ('p').
         int i = 0;
         for (; nameWithLocation.charAt(i) != '('; i++) {
@@ -62,7 +62,7 @@ public class Market {
         }
         String name = nameWithLocation.substring(0, i-1);
         String location = nameWithLocation.substring(i+1, nameWithLocation.length()-1);
-        Log.d(TAG, "extractNameAndLocation:  market name is: " + name + ", and location is: " + location);
+        //Log.d(TAG, "extractNameAndLocation:  market name is: " + name + ", and location is: " + location);
         String[] nameAndLocation = {name, location};
         return nameAndLocation;
     }

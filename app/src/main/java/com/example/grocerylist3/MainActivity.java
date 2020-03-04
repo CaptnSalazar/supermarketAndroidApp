@@ -27,10 +27,14 @@ import android.widget.ToggleButton;
 import com.google.android.material.snackbar.Snackbar;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static android.text.TextUtils.isDigitsOnly;
 
+/* this talks about robolex https://developer.android.com/training/testing/unit-testing/local-unit-tests */
+
+ /* for some reason, when you save aisles it doesn't save the aisle number and refreshes as ? !!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity*<*<*<*<*<*";
     private SQLiteDatabase mDatabase;
@@ -47,7 +51,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<Market> spinnerArrayAdapter;
     private boolean mIsSpinnerBeingEdited = false;
 
-    private String currentColumnMarketAisles = GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE;
+    private Integer lowestUnusedColumnNumber = 1;
+    private String aisleNumOfItemsInSelectedMarket = "market1AisleLocation";
     private final Integer SQL_TRUE = 1;
     private final Integer SQL_FALSE = 0;
 
@@ -95,10 +100,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Get a Spinner and bind it to an ArrayAdapter that
         // references an array (eg a String array or a array of custom objects).
-
         spinnerMarketArray = mAdapter.getMarketList(mDatabase);
         //spinnerMarketArray = new ArrayList<Market>();
-
         spinner = findViewById(R.id.spinner);
         spinnerArrayAdapter = new ArrayAdapter<Market> (this,
                 android.R.layout.simple_spinner_item, //the spinner itself will look like this (no radio buttons).
@@ -109,8 +112,7 @@ public class MainActivity extends AppCompatActivity {
             TextView textviewSpinnerEmpty = findViewById(R.id.textViewSpinnerEmpty);
             textviewSpinnerEmpty.setVisibility(View.GONE);
             spinner.setSelection(mAdapter.getPositionMarketSelected());
-        } //make textView gone and spinner.setSelected(position)
-        else {
+        } else {
             spinner.setVisibility(View.GONE);
         }
         setOnSpinnerItemSelectedListener();
@@ -135,10 +137,12 @@ public class MainActivity extends AppCompatActivity {
         mDatabase.execSQL("DELETE FROM " + GroceryContract.GroceryEntry.TABLE_NAME);
         mDatabase.execSQL("DELETE FROM " + GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET);
 
+        lowestUnusedColumnNumber = 1;
+
         mAdapter.swapCursorGrocery(getAllItems());
         //mAdapter.swapCursorMarket(getAllSupermarkets());
 
-        spinnerMarketArray = mAdapter.getMarketList(mDatabase);
+        spinnerMarketArray = new ArrayList<Market>();
         //these thee statements are needed for spinner to refresh.
         spinnerArrayAdapter = new ArrayAdapter<Market> (this,
                 android.R.layout.simple_spinner_item, //the spinner itself will look like this (no radio buttons).
@@ -167,9 +171,9 @@ public class MainActivity extends AppCompatActivity {
          * update it, it means the item isn't on it, so insert the new item. Then scroll to the position
          * of the item - including if the item was already on the recyclerview list. */
 
-        Log.d(TAG, "addItem() called");
-        Log.d(TAG, "inside addItem and toggleEditAisle value is " + toggleEditAisle.isChecked());
-        Log.d(TAG, "inside addItem and toggleDelete value is " + toggleDelete.isChecked());
+//        Log.d(TAG, "addItem() called");
+//        Log.d(TAG, "inside addItem and toggleEditAisle value is " + toggleEditAisle.isChecked());
+//        Log.d(TAG, "inside addItem and toggleDelete value is " + toggleDelete.isChecked());
         if (mEditTextName.getText().toString().trim ().length() == 0) {
             return;
         }
@@ -214,31 +218,33 @@ public class MainActivity extends AppCompatActivity {
     public void onConfirm(View view) {
         Log.d(TAG, "onConfirm: ");
 
-
-
         EditText editTextName = findViewById(R.id.editTextMarketName);
         String newMarketName = editTextName.getText().toString().trim();
         EditText editTextLocation = findViewById(R.id.editTextMarketLocation);
         String newMarketLocation = editTextLocation.getText().toString().trim();
 
-        if ((spinnerMarketArray.size() == 0) && (newMarketName.length() > 0) && (newMarketLocation.length() > 0)) {  //if we are adding item for the first time.
+//        if (spinnerMarketArray.size() == 0) {  //if we are adding item for the first time.
+//
+//        }
+
+        if ((newMarketName.length() > 0) && (newMarketLocation.length() > 0)){
+
+            addMarketToTable(newMarketName, newMarketLocation);
+
             TextView textViewSpinnerEmpty = findViewById(R.id.textViewSpinnerEmpty);
             textViewSpinnerEmpty.setVisibility(View.GONE);
             spinner.setVisibility(View.VISIBLE);
+
+            spinnerMarketArray = mAdapter.getMarketList(mDatabase); //not efficient way of adding Market but this won't be done often.
+            setLayoutEditSpinner();
+            //these thee statements are needed for spinner to refresh.
+            spinnerArrayAdapter = new ArrayAdapter<Market> (this,
+                    android.R.layout.simple_spinner_item, //the spinner itself will look like this (no radio buttons).
+                    spinnerMarketArray); //selected item will look like a spinner set from XML.
+            spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); //each item in the spinner will look like this when you click the spinner (with radio buttons).
+            spinner.setAdapter(spinnerArrayAdapter);
+            spinner.setSelection(mAdapter.getPositionMarketSelected());
         }
-
-        addMarketToTable(newMarketName, newMarketLocation);
-        spinnerMarketArray = mAdapter.getMarketList(mDatabase); //not efficient way of adding Market but this won't be done often.
-
-        setLayoutEditSpinner();
-
-        //these thee statements are needed for spinner to refresh.
-        spinnerArrayAdapter = new ArrayAdapter<Market> (this,
-                android.R.layout.simple_spinner_item, //the spinner itself will look like this (no radio buttons).
-                spinnerMarketArray); //selected item will look like a spinner set from XML.
-        spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); //each item in the spinner will look like this when you click the spinner (with radio buttons).
-        spinner.setAdapter(spinnerArrayAdapter);
-        spinner.setSelection(mAdapter.getPositionMarketSelected());
     }
 
 
@@ -252,14 +258,16 @@ public class MainActivity extends AppCompatActivity {
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME, newMarketName);
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION, newMarketLocation);
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_TRUE);
+        cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN, lowestUnusedColumnNumber);
+        lowestUnusedColumnNumber++;
         mDatabase.insert(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET, null, cv);
-        updateTableSelectedMarket(newMarketName, newMarketLocation);
+        selectedMarketUpdate(newMarketName, newMarketLocation);
         //mAdapter.swapCursorMarket(getAllSupermarkets(mDatabase));
     }
 
 
-    private void updateTableSelectedMarket(String selectedMarketName, String selectedMarketLocation) {
-        Log.d(TAG, "updateTableSelectedMarket: making isSelected true in only " + selectedMarketName + " (" + selectedMarketLocation + ")");
+    private void selectedMarketUpdate(String selectedMarketName, String selectedMarketLocation) {
+        Log.d(TAG, "selectedMarketUpdate: making isSelected true in only " + selectedMarketName + " (" + selectedMarketLocation + ")");
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_FALSE);
         String[] selectionArgsForSelectedMarket = {selectedMarketName , selectedMarketLocation};
@@ -268,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
                 "NOT " + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? OR NOT " +
                         GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?", //practically unnecessary in this context but I wanna learn SQL
                 selectionArgsForSelectedMarket);
-        Log.d(TAG, "updateTableSelectedMarket:  number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
+        Log.d(TAG, "selectedMarketUpdate:  number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
 
         ContentValues cvOfSelectedMarket = new ContentValues();
         cvOfSelectedMarket.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_TRUE);
@@ -277,8 +285,14 @@ public class MainActivity extends AppCompatActivity {
                 GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
                         GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?",
                 selectionArgsForSelectedMarket);
-        Log.d(TAG, "updateTableSelectedMarket:  number of rows updated: " + numRowsUpdated2); //Integer is automatically converted to String if needed
+        Log.d(TAG, "selectedMarketUpdate:  number of rows updated: " + numRowsUpdated2); //Integer is automatically converted to String if needed
 
+
+        long selectedMarketGroceryColumnNumber = GroceryAdapter.getSelectedMarketGroceryListColumnNumber(mDatabase);
+        Log.d(TAG, "selectedMarketUpdate:    selectedMarketGroceryColumnNumber: " + selectedMarketGroceryColumnNumber);
+        String selectedMarketColumnName = GroceryContract.getGroceryColumnNameFromMarketID(selectedMarketGroceryColumnNumber);
+        //aisleNumOfItemsInSelectedMarket = selectedMarketColumnName;
+        Log.d(TAG, "selectedMarketUpdate:     aisleNumOfItemsInSelectedMarket: " + aisleNumOfItemsInSelectedMarket);
     }
 
 
@@ -393,14 +407,15 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "saveAisles() called");
         View v; // v will be each item (i.e. one set of aisleNumber, productName, checkBox views) in recyclerview.
         for (int i = 0; i < recyclerView.getChildCount(); i++) {
-            Log.d(TAG, "we are at the " + String.valueOf(i) + "th value of the recyclerview ------");
+            Log.d(TAG, "saveAisles: we are at the " + String.valueOf(i) + "th value of the recyclerview ------");
             v = recyclerView.getChildAt(i); // v encapsulates a pair of aisle editText and product name EditText.
             EditText aisleEditText = v.findViewById(R.id.edittext_aisle_number);
             EditText productNameEditText = v.findViewById(R.id.edittext_product_name);
             String aisleNumberStr = aisleEditText.getText().toString();
             String productNameStr = productNameEditText.getText().toString();
-            Log.d("MainActivity", "aisle found --> " + aisleNumberStr);
-            Log.d("MainActivity", "product found --> " + productNameStr);
+            Log.d(TAG, "saveAisles: aisle found --> " + aisleNumberStr);
+            Log.d(TAG, "saveAisles: product found --> " + productNameStr);
+            Log.d(TAG, "saveAisles: aisleNumOfItemsInSelectedMarket: " + aisleNumOfItemsInSelectedMarket);
             updateAisle(aisleNumberStr, productNameStr);
             //aisleEditText.setKeyListener(null); //makes the EditText non-editable so, it acts like a TextView.
         }
@@ -411,14 +426,14 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "updateAisle() called");
         if (isDigitsOnly(aisleNumberStr) && (aisleNumberStr.length() > 0) && (productNameStr.length() > 0)) {
             ContentValues cv = new ContentValues();
-            cv.put(currentColumnMarketAisles, Integer.parseInt(aisleNumberStr));
+            cv.put(aisleNumOfItemsInSelectedMarket, Integer.parseInt(aisleNumberStr));
 
             String[] mySelectionArgs = {productNameStr};
             int numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
                     cv,
                     GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
                     mySelectionArgs);
-            Log.d(TAG, "number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
+            Log.d(TAG, "updateAisle: number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
             mAdapter.swapCursorGrocery(getAllItems());
         }
     }
@@ -473,12 +488,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedMarket = parent.getItemAtPosition(position).toString();
-                Log.d(TAG, "onItemSelected:  updating table so that only " + selectedMarket +
-                        " has true value of IsSelected");
+                Log.d(TAG, "onItemSelected:  updating table so that only " + selectedMarket + " has true value of IsSelected");
                 String[] marketInfo = Market.extractNameAndLocation(selectedMarket);
                 //MAKE SURE THE USER CANNOT INPUT '(' AS IN MARKET NAME OR LOCATION OTHERWISE THIS WILL HAVE BUGS.
                 Log.d(TAG, "onItemSelected:  market name is " + marketInfo[0] + ", and location is: " + marketInfo[1]);
-                updateTableSelectedMarket(marketInfo[0], marketInfo[1]);
+                selectedMarketUpdate(marketInfo[0], marketInfo[1]);
             }
 
             @Override
@@ -499,7 +513,7 @@ public class MainActivity extends AppCompatActivity {
                 mySelectionArgs, //You may include ?s in selection, which will be replaced by the values from selectionArgs, in order that they appear in the selection. The values will be bound as Strings.
                 null,
                 null,
-                currentColumnMarketAisles + " ASC, " + GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
+                aisleNumOfItemsInSelectedMarket + " ASC, " + GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
         );
     }
 
@@ -525,6 +539,9 @@ public class MainActivity extends AppCompatActivity {
 
     /*
     Future implementations:
+
+    for some reason, when you save aisles it doesn't save the aisle number and refreshes as ? !!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
     0.5) When you press "Edit Spinner", a window pops up (OR MAYBE WE START ANOTHER ACTIVITY??) that has a "negative" button/option of "change name", and
     a "positive" button/option of "add new". If you press change name, a picker pops up for you to select/find the
     market name you wanna change and 2 editTexts one above the other appear with text to their left saying
@@ -538,7 +555,8 @@ public class MainActivity extends AppCompatActivity {
     4) when the user adds an item to the list that has very similar spelling to another,
     make a window pop-up, saying that there already exists a record of [this other item]. Are they they the same?
     Which spelling is right?
-    5) Make background thread (see your java google docs for link)
+    5) Make an undo feature, google how to make undo using sqlite with/or in android studio.
+    6) Make background thread (see your java google docs for link)
      */
 
 }

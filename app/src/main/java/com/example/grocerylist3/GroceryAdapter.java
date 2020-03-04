@@ -189,6 +189,26 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         return positionMarketSelected;
     }
 
+    static public long getSelectedMarketGroceryListColumnNumber(SQLiteDatabase database) {
+        Integer SQL_TRUE = 1;
+        String[] selectionArgs = {String.valueOf(SQL_TRUE)};
+        Cursor cursorMarkets = database.query(
+                GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
+                null,
+                GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED + " =?",
+                selectionArgs,
+                null,
+                null,
+                null
+        );
+
+        cursorMarkets.moveToFirst();
+        String marketName = cursorMarkets.getString(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME));
+        Log.d(TAG, "getSelectedMarketGroceryListColumnNumber:   marketName is: " + marketName);
+        long relativeID = cursorMarkets.getLong(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN));
+        return relativeID;
+    }
+
 
     private Cursor getAllSupermarkets(SQLiteDatabase database) {
         Log.d(TAG, "getAllSupermarkets() called");
