@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -16,7 +15,6 @@ import static org.junit.Assert.*;
 
 @RunWith(AndroidJUnit4.class)
 public class MainActivityTest {
-    //private Context context = ApplicationProvider.getApplicationContext();
 
     @Test
     public void onCreate() {
@@ -30,10 +28,13 @@ public class MainActivityTest {
         String expectedName1 = "Aaapple";
         String expectedName2 = "Zzzebra";
 
-        ContentValues cv = new ContentValues();
-        cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, expectedName1);
-        cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, expectedName2);
-        database.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
+        ContentValues cv1 = new ContentValues();
+        cv1.put(GroceryContract.GroceryEntry.COLUMN_NAME, expectedName1);
+        database.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv1); //Must insert one row at a time.
+
+        ContentValues cv2 = new ContentValues();
+        cv2.put(GroceryContract.GroceryEntry.COLUMN_NAME, expectedName2);
+        database.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv2); //Must insert one row at a time.
 
         String[] isInListSelectionArgs = new String[]{String.valueOf(SQL_TRUE)};
         Cursor cursor = database.query(
