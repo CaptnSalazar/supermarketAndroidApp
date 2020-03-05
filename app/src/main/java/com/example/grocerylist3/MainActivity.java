@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Get a Spinner and bind it to an ArrayAdapter that
         // references an array (eg a String array or a array of custom objects).
-        spinnerMarketArray = mAdapter.getMarketList(mDatabase);
+        spinnerMarketArray = mAdapter.getMarketsList(mDatabase);
         //spinnerMarketArray = new ArrayList<Market>();
         spinner = findViewById(R.id.spinner);
         spinnerArrayAdapter = new ArrayAdapter<Market> (this,
@@ -235,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
             textViewSpinnerEmpty.setVisibility(View.GONE);
             spinner.setVisibility(View.VISIBLE);
 
-            spinnerMarketArray = mAdapter.getMarketList(mDatabase); //not efficient way of adding Market but this won't be done often.
+            spinnerMarketArray = mAdapter.getMarketsList(mDatabase); //not efficient way of adding Market but this won't be done often.
             setLayoutEditSpinner();
             //these thee statements are needed for spinner to refresh.
             spinnerArrayAdapter = new ArrayAdapter<Market> (this,

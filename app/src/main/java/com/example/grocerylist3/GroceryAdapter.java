@@ -141,7 +141,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
 
 
     public String getItemName(int position) {
-        mCursorGrocery.moveToPosition(position);
+        mCursorGrocery.moveToPosition(position); //first position is 0 (zero).
         String nameOfItemChecked = mCursorGrocery.getString(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
         Log.d(TAG, "Inside addItemToTrolley(), product checked is: " + nameOfItemChecked);
         return nameOfItemChecked;
@@ -155,15 +155,15 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
 
-    public List<Market> getMarketList(SQLiteDatabase database) {
-        Log.d(TAG, "getMarketList: ");
+    public List<Market> getMarketsList(SQLiteDatabase database) {
+        Log.d(TAG, "getMarketsList: ");
         Cursor mCursorMarket = getAllSupermarkets(database);
         List<Market> newSpinnerArray = new ArrayList<Market>();
         //iterate through all rows and append the name/location and ID to Market list.
         boolean moveSucceeded = mCursorMarket.moveToFirst();
         int position = 0;
         while (moveSucceeded) {
-            Log.d(TAG, "getMarketList:       " + position + "th iteration of while loop.");
+            Log.d(TAG, "getMarketsList:       " + position + "th iteration of while loop.");
             String marketName = mCursorMarket.getString(mCursorMarket.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME));
             String marketLocation = mCursorMarket.getString(mCursorMarket.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION));
             Integer marketID = mCursorMarket.getInt(mCursorMarket.getColumnIndex(GroceryContract.SupermarketsVisited._ID));
@@ -172,13 +172,13 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
             newSpinnerArray.add(market);
             if (marketIsSelected) {
                 positionMarketSelected = position;
-                Log.d(TAG, "getMarketList:  market" + marketName + " is selected and has position: " + positionMarketSelected);
+                Log.d(TAG, "getMarketsList:  market" + marketName + " is selected and has position: " + positionMarketSelected);
             }
-            Log.d(TAG, "getMarketList: marketName: " + marketName);
+            Log.d(TAG, "getMarketsList: marketName: " + marketName);
             position++;
             moveSucceeded = mCursorMarket.moveToNext();
         }
-        Log.d(TAG, "getMarketList:  F I N I S H E D !!!");
+        Log.d(TAG, "getMarketsList:  F I N I S H E D !!!");
         mCursorMarket.close();
         return newSpinnerArray;
     }
