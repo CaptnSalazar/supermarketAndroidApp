@@ -26,9 +26,4 @@ public class GroceryContract {
         public static final String COLUMN_MARKET_LOCATION = "supermarketLocation";  //e.g. islam
         public static final String COLUMN_IS_MARKET_SELECTED = "isMarketSelected";  //e.g. islam
     }
-
-    static public String getGroceryColumnNameFromMarketID(long id) {
-        String groceryColumnName = "market" + id + "AisleLocation";
-        return groceryColumnName;
-    }
 }

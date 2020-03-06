@@ -34,7 +34,9 @@ import static android.text.TextUtils.isDigitsOnly;
 
 /* this talks about robolex https://developer.android.com/training/testing/unit-testing/local-unit-tests */
 
- /* for some reason, when you save aisles it doesn't save the aisle number and refreshes as ? !!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+/* 1) Figure out what branching is and if it can help you not delete git stuff permanently like you would if you roll back to previous commit.
+2) Roll back to your latest git commit. Then, make a function called getSelectedMarketName that queries the supermaket
+table (if it's full, else return market1AisleLocation) and returns the relativeID (i.e. the row value of groceryListColumnNumber) formatted as marketXAisleLocation !!!!!!!!!!!!!!!!!!!!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity*<*<*<*<*<*";
     private SQLiteDatabase mDatabase;
@@ -51,8 +53,6 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<Market> spinnerArrayAdapter;
     private boolean mIsSpinnerBeingEdited = false;
 
-    private Integer lowestUnusedColumnNumber = 1;
-    private String aisleNumOfItemsInSelectedMarket = "market1AisleLocation";
     private final Integer SQL_TRUE = 1;
     private final Integer SQL_FALSE = 0;
 
@@ -70,9 +70,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.recyclerview);
         LinearLayoutManager manager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(manager);
-        //mAdapter = new GroceryAdapter(getAllItems(), this);
-        //mAdapter = new GroceryAdapter(getAllItems(), getAllSupermarkets(), this);
-        mAdapter = new GroceryAdapter(getAllItems(), this);
+        mAdapter = new GroceryAdapter(getAllItems(),this, GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase));
         recyclerView.setAdapter(mAdapter);
         mSwipeable = false;
 
@@ -101,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
         // Get a Spinner and bind it to an ArrayAdapter that
         // references an array (eg a String array or a array of custom objects).
         spinnerMarketArray = mAdapter.getMarketsList(mDatabase);
-        //spinnerMarketArray = new ArrayList<Market>();
         spinner = findViewById(R.id.spinner);
         spinnerArrayAdapter = new ArrayAdapter<Market> (this,
                 android.R.layout.simple_spinner_item, //the spinner itself will look like this (no radio buttons).
@@ -136,8 +133,6 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "onDeleteAllRows() called");
         mDatabase.execSQL("DELETE FROM " + GroceryContract.GroceryEntry.TABLE_NAME);
         mDatabase.execSQL("DELETE FROM " + GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET);
-
-        lowestUnusedColumnNumber = 1;
 
         mAdapter.swapCursorGrocery(getAllItems());
         //mAdapter.swapCursorMarket(getAllSupermarkets());
@@ -223,10 +218,6 @@ public class MainActivity extends AppCompatActivity {
         EditText editTextLocation = findViewById(R.id.editTextMarketLocation);
         String newMarketLocation = editTextLocation.getText().toString().trim();
 
-//        if (spinnerMarketArray.size() == 0) {  //if we are adding item for the first time.
-//
-//        }
-
         if ((newMarketName.length() > 0) && (newMarketLocation.length() > 0)){
 
             addMarketToTable(newMarketName, newMarketLocation);
@@ -249,20 +240,13 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void addMarketToTable(String newMarketName, String newMarketLocation) {
-        Log.d(TAG, "addMarketToTable: ");
-        if ((newMarketName.trim().length() == 0) || (newMarketLocation.trim().length() == 0)) {
-            return;
-        }
-
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME, newMarketName);
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION, newMarketLocation);
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_TRUE);
-        cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN, lowestUnusedColumnNumber);
-        lowestUnusedColumnNumber++;
+        cv.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN, GroceryAdapter.getNewestGroceryListColumnNumber(mDatabase));
         mDatabase.insert(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET, null, cv);
         selectedMarketUpdate(newMarketName, newMarketLocation);
-        //mAdapter.swapCursorMarket(getAllSupermarkets(mDatabase));
     }
 
 
@@ -271,28 +255,24 @@ public class MainActivity extends AppCompatActivity {
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_FALSE);
         String[] selectionArgsForSelectedMarket = {selectedMarketName , selectedMarketLocation};
-        int numRowsUpdated = mDatabase.update(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
+        mDatabase.update(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                 cv,
                 "NOT " + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? OR NOT " +
                         GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?", //practically unnecessary in this context but I wanna learn SQL
                 selectionArgsForSelectedMarket);
-        Log.d(TAG, "selectedMarketUpdate:  number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
 
         ContentValues cvOfSelectedMarket = new ContentValues();
         cvOfSelectedMarket.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_TRUE);
-        int numRowsUpdated2 = mDatabase.update(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
+        mDatabase.update(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                 cvOfSelectedMarket,
                 GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
                         GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?",
                 selectionArgsForSelectedMarket);
-        Log.d(TAG, "selectedMarketUpdate:  number of rows updated: " + numRowsUpdated2); //Integer is automatically converted to String if needed
 
-
-        long selectedMarketGroceryColumnNumber = GroceryAdapter.getSelectedMarketGroceryListColumnNumber(mDatabase);
-        Log.d(TAG, "selectedMarketUpdate:    selectedMarketGroceryColumnNumber: " + selectedMarketGroceryColumnNumber);
-        String selectedMarketColumnName = GroceryContract.getGroceryColumnNameFromMarketID(selectedMarketGroceryColumnNumber);
-        //aisleNumOfItemsInSelectedMarket = selectedMarketColumnName;
-        Log.d(TAG, "selectedMarketUpdate:     aisleNumOfItemsInSelectedMarket: " + aisleNumOfItemsInSelectedMarket);
+        String selectedMarketGroceryColumnName = GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase);
+        mAdapter.setmSelectedMarketColumnName(selectedMarketGroceryColumnName);
+        mAdapter.swapCursorGrocery(getAllItems());
+        recyclerView.scrollToPosition(0);
     }
 
 
@@ -415,7 +395,7 @@ public class MainActivity extends AppCompatActivity {
             String productNameStr = productNameEditText.getText().toString();
             Log.d(TAG, "saveAisles: aisle found --> " + aisleNumberStr);
             Log.d(TAG, "saveAisles: product found --> " + productNameStr);
-            Log.d(TAG, "saveAisles: aisleNumOfItemsInSelectedMarket: " + aisleNumOfItemsInSelectedMarket);
+            Log.d(TAG, "saveAisles: selectedMarketGroceryColumnName: " + GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase));
             updateAisle(aisleNumberStr, productNameStr);
             //aisleEditText.setKeyListener(null); //makes the EditText non-editable so, it acts like a TextView.
         }
@@ -426,7 +406,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "updateAisle() called");
         if (isDigitsOnly(aisleNumberStr) && (aisleNumberStr.length() > 0) && (productNameStr.length() > 0)) {
             ContentValues cv = new ContentValues();
-            cv.put(aisleNumOfItemsInSelectedMarket, Integer.parseInt(aisleNumberStr));
+            cv.put(GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase), Integer.parseInt(aisleNumberStr));
 
             String[] mySelectionArgs = {productNameStr};
             int numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
@@ -513,7 +493,7 @@ public class MainActivity extends AppCompatActivity {
                 mySelectionArgs, //You may include ?s in selection, which will be replaced by the values from selectionArgs, in order that they appear in the selection. The values will be bound as Strings.
                 null,
                 null,
-                aisleNumOfItemsInSelectedMarket + " ASC, " + GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
+                GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase) + " ASC, " + GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
         );
     }
 
@@ -555,7 +535,12 @@ public class MainActivity extends AppCompatActivity {
     4) when the user adds an item to the list that has very similar spelling to another,
     make a window pop-up, saying that there already exists a record of [this other item]. Are they they the same?
     Which spelling is right?
-    5) Make an undo feature, google how to make undo using sqlite with/or in android studio.
+    5) Make a feature that allows the user to change the supermarket they updated, in case they made a mistake and updated
+    the wrong supermarket. Be like, in your last session, you updated THIS supermarket, but which supermarket did MEAN to update?
+    Maybe keep track of updates by date or how distant (time-wise) the last update to a table was, e.g. if you updated the location
+    of cocoa powder and then 4 hours later updated the position of flour, if there are not updates in between to connect the two,
+    the program will regard these as two separate sessions.
+    5.5) Make an undo feature, google how to make undo using sqlite with/or in android studio.
     6) Make background thread (see your java google docs for link)
      */
 

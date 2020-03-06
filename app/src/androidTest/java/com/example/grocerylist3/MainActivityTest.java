@@ -88,4 +88,9 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         assertEquals(expectedName1, actualName1);
         assertEquals(expectedName2, actualName2);
     }
+
+    @Test
+    public void addMarketToTable () {
+
+    }
 }

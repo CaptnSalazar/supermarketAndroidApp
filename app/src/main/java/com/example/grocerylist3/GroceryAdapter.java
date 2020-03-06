@@ -23,13 +23,14 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     //private Cursor mCursorMarket;
     private OnItemClickListener mListener;
     private int positionMarketSelected;
+    private String mSelectedMarketColumnName;
 
 
     public interface OnItemClickListener {
         /*An interface is a completely "abstract class" that is used to group related methods with empty bodies.
-        * To access the interface methods, the interface must be "implemented" (kinda like inherited) by another
-        *  class with the implements keyword (instead of extends). The body of the interface method is provided
-        * by the "implement" class (see onCheckBox in the MainActivity class).  */
+         * To access the interface methods, the interface must be "implemented" (kinda like inherited) by another
+         *  class with the implements keyword (instead of extends). The body of the interface method is provided
+         * by the "implement" class (see onCheckBox in the MainActivity class).  */
 
         //void onItemClick(int position);
         void onCheckBox(int position);
@@ -40,10 +41,11 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
 
-    public GroceryAdapter(Cursor cursorGrocery, Context context) {
+    public GroceryAdapter(Cursor cursorGrocery, Context context, String selectedMarketColumnName) {
         Log.d(TAG, "GroceryAdapter() called");
         mContext = context;
         mCursorGrocery = cursorGrocery;
+        mSelectedMarketColumnName = selectedMarketColumnName;
         //mCursorMarket = cursorMarket;
     }
 
@@ -93,7 +95,8 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         }
 
         String name = mCursorGrocery.getString(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
-        Integer aisle = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_MARKET1_AISLE));
+        Log.d(TAG, "onBindViewHolder:  mSelectedMarketColumnName is " + mSelectedMarketColumnName + " <<<<<<<<<<<<<<<<<<<<<<<<<");
+        Integer aisle = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(mSelectedMarketColumnName));
         Integer isInTrolley = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY));
         long id = mCursorGrocery.getLong(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry._ID));
 
@@ -157,17 +160,17 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
 
     public List<Market> getMarketsList(SQLiteDatabase database) {
         Log.d(TAG, "getMarketsList: ");
-        Cursor mCursorMarket = getAllSupermarkets(database);
+        Cursor cursorMarkets = getAllSupermarkets(database);
         List<Market> newSpinnerArray = new ArrayList<Market>();
         //iterate through all rows and append the name/location and ID to Market list.
-        boolean moveSucceeded = mCursorMarket.moveToFirst();
+        boolean moveSucceeded = cursorMarkets.moveToFirst();
         int position = 0;
         while (moveSucceeded) {
             Log.d(TAG, "getMarketsList:       " + position + "th iteration of while loop.");
-            String marketName = mCursorMarket.getString(mCursorMarket.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME));
-            String marketLocation = mCursorMarket.getString(mCursorMarket.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION));
-            Integer marketID = mCursorMarket.getInt(mCursorMarket.getColumnIndex(GroceryContract.SupermarketsVisited._ID));
-            boolean marketIsSelected = integerToBoolean(mCursorMarket.getInt(mCursorMarket.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED)));
+            String marketName = cursorMarkets.getString(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME));
+            String marketLocation = cursorMarkets.getString(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION));
+            Integer marketID = cursorMarkets.getInt(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited._ID));
+            boolean marketIsSelected = integerToBoolean(cursorMarkets.getInt(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED)));
             Market market = new Market(marketName, marketLocation , marketID, marketIsSelected);
             newSpinnerArray.add(market);
             if (marketIsSelected) {
@@ -176,10 +179,10 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
             }
             Log.d(TAG, "getMarketsList: marketName: " + marketName);
             position++;
-            moveSucceeded = mCursorMarket.moveToNext();
+            moveSucceeded = cursorMarkets.moveToNext();
         }
         Log.d(TAG, "getMarketsList:  F I N I S H E D !!!");
-        mCursorMarket.close();
+        cursorMarkets.close();
         return newSpinnerArray;
     }
 
@@ -189,7 +192,12 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         return positionMarketSelected;
     }
 
-    static public long getSelectedMarketGroceryListColumnNumber(SQLiteDatabase database) {
+    public void setmSelectedMarketColumnName(String selectedMarketColumnName) {
+        Log.d(TAG, "setmSelectedMarketColumnName:  new value of mSelectedMarketColumnName is " + this.mSelectedMarketColumnName);
+        this.mSelectedMarketColumnName = selectedMarketColumnName;
+    }
+
+    static public String getSelectedMarketGroceryListColumnName(SQLiteDatabase database) {
         Integer SQL_TRUE = 1;
         String[] selectionArgs = {String.valueOf(SQL_TRUE)};
         Cursor cursorMarkets = database.query(
@@ -202,11 +210,45 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
                 null
         );
 
-        cursorMarkets.moveToFirst();
-        String marketName = cursorMarkets.getString(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME));
-        Log.d(TAG, "getSelectedMarketGroceryListColumnNumber:   marketName is: " + marketName);
-        long relativeID = cursorMarkets.getLong(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN));
-        return relativeID;
+        String selectedMarketGroceryListColumnName;
+        boolean moveSucceeded = cursorMarkets.moveToFirst();
+        if (!moveSucceeded) {
+            selectedMarketGroceryListColumnName = "market1AisleLocation";
+        } else {
+            String marketName = cursorMarkets.getString(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME));
+            long relativeID = cursorMarkets.getLong(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN));
+            Log.d(TAG, "getSelectedMarketGroceryListColumnNumber: marketName is: " + marketName + "and its relativeID is: " + relativeID);
+            String selectedMarketColumnName = "market" + relativeID + "AisleLocation";
+            return selectedMarketColumnName;
+        }
+        cursorMarkets.close();
+        return selectedMarketGroceryListColumnName;
+    }
+
+    static public int getNewestGroceryListColumnNumber(SQLiteDatabase database) {
+        Cursor cursorMarkets = database.query(
+                GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
+                null,
+                null,
+                null,
+                null,
+                null,
+                GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN + " ASC"
+        );
+
+        int newestGroceryListColumnNumber;
+        boolean moveSucceeded = cursorMarkets.moveToLast();
+        if (!moveSucceeded) {
+            Log.d(TAG, "getNewestGroceryListColumnNumber:  move did not succeed because table is empty");
+            newestGroceryListColumnNumber = 1;
+        } else {
+            String marketName = cursorMarkets.getString(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME));
+            String marketLocation = cursorMarkets.getString(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION));
+            newestGroceryListColumnNumber = cursorMarkets.getInt(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN)) + 1;
+            Log.d(TAG, "getNewestGroceryListColumnNumber: " + marketName + " (" + marketLocation + ") - newHighestRelativeID: " + newestGroceryListColumnNumber);
+        }
+        cursorMarkets.close();
+        return newestGroceryListColumnNumber;
     }
 
 
