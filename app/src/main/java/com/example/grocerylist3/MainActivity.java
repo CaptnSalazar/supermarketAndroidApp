@@ -32,9 +32,10 @@ import java.util.List;
 
 import static android.text.TextUtils.isDigitsOnly;
 
-/* this talks about robolex https://developer.android.com/training/testing/unit-testing/local-unit-tests */
 
-/* 1) Figure out what branching is and if it can help you not delete git stuff permanently like you would if you roll back to previous commit. <<<<<<<*/
+/* >> Figure out what branching is and if it can help you not delete git stuff permanently like you would if you roll back to previous commit. <<<<<<<*/
+/* >> CHECK Future Implementations AT THE BOTTOM OF THIS DOCUMENT TO SEE WHAT TO DO NEXT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity*<*<*<*<*<*";
     private SQLiteDatabase mDatabase;
@@ -518,30 +519,30 @@ public class MainActivity extends AppCompatActivity {
     /*
     Future implementations:
 
-    for some reason, when you save aisles it doesn't save the aisle number and refreshes as ? !!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    Note: when you try to add an item and there is no supermarket selected, it just automatically makes it market1AisleLocation
 
-    Done: 0) when you try to add an item and there is no supermarket selected, it just automatically makes it market1AisleLocation
-
-    0.5) When you press "Edit Spinner", a window pops up (OR MAYBE WE START ANOTHER ACTIVITY??) that has a "negative" button/option of "change name", and
+    >> Add tests for the UI, e.g. when I add an item, is it displayed on the recyclerview. When I change that item's aisle, number does it
+    save properly? When I select a different market, does the aisle number change accordingly?
+    >> When you press "Edit Spinner", a window pops up (OR MAYBE WE START ANOTHER ACTIVITY??) that has a "negative" button/option of "change name", and
     a "positive" button/option of "add new". If you press change name, a picker pops up for you to select/find the
     market name you wanna change and 2 editTexts one above the other appear with text to their left saying
     "Location" with editText hint "e.g. Ilam Road", and "Company" with editText hint "e.g. Countdown", and
     two buttons/options, "cancel" and "confirm".
-    NOTE: not sure if I should make it so that when an aisle editText loses focus you check if it was changed because a
-    person might butt type or whatever, although that's unlikely, and the program (will) expect a reasonable.
-    1) Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
-    2) Autocompletion based on the items that already exist in database.
-    3) Make the Edit List button glow or point to it, when someone tries to do other things while in Edit mode.
-    4) when the user adds an item to the list that has very similar spelling to another,
+    >> Make the program only accept reasonable values for the item names and aisle numbers and supermarket names.
+    >> Make it so that when you are in edit mode, and an aisle editText loses focus you check if it was changed.
+    >> Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
+    >> Autocompletion based on the items that already exist in database.
+    >> Make the Edit List button glow or point to it, when someone tries to do other things while in Edit mode.
+    >> when the user adds an item to the list that has very similar spelling to another,
     make a window pop-up, saying that there already exists a record of [this other item]. Are they they the same?
     Which spelling is right?
-    5) Make a feature that allows the user to change the supermarket they updated, in case they made a mistake and updated
+    >> Make a feature that allows the user to change the supermarket they updated, in case they made a mistake and updated
     the wrong supermarket. Be like, in your last session, you updated THIS supermarket, but which supermarket did MEAN to update?
     Maybe keep track of updates by date or how distant (time-wise) the last update to a table was, e.g. if you updated the location
     of cocoa powder and then 4 hours later updated the position of flour, if there are not updates in between to connect the two,
     the program will regard these as two separate sessions.
-    5.5) Make an undo feature, google how to make undo using sqlite with/or in android studio.
-    6) Make background thread (see your java google docs for link)
+    Make an undo feature, google how to make undo using sqlite with/or in android studio.
+    >> Make background thread (see your java google docs for link)
      */
 
 }
