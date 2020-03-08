@@ -22,23 +22,7 @@ public class GroceryAdapterTest {
     SQLiteDatabase database;
     Cursor cursorItems;
 
-    String aisleNumOfItemsInSelectedMarket;
-
-    String firstItem = "Aaapple";
-    String secondItem = "Aabpple";
-    String thirdItem = "Aacpple";
-    String lastItem = "Zzzebra";
-
-    int NUMBER_OF_SUPERMARKETS = 3;
-    String newMarketName1 = "Kountdown";
-    String newMarketLocation1 = "Capao";
-    String newMarketName2 = "Kountdown";
-    String newMarketLocation2 = "Porto Alegre";
-    String newMarketName3 = "Pack And Save";
-    String newMarketLocation3 = "Porto Alegre";
-
-    final int SQL_TRUE = 1;
-    final int SQL_FALSE = 0;
+    String selectedMarketGroceryListColumnName;
 
     @Before
     public void setUp() throws Exception {
@@ -54,90 +38,19 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         dbHelper = new GroceryDBHelper(context);
         database = dbHelper.getWritableDatabase(); //Create and/or open a database that will be used for reading and writing.
 
-        database.execSQL("DELETE FROM " + GroceryContract.GroceryEntry.TABLE_NAME);
-        database.execSQL("DELETE FROM " + GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET);
+        DatabaseTestHelper.populateTableGroceryList(database);
 
-        /* adding ITEMS to table */
-        aisleNumOfItemsInSelectedMarket = "market1AisleLocation";
+        DatabaseTestHelper.populateTableSupermarkets(database);
 
-        ContentValues cvItem1 = new ContentValues();
-        cvItem1.put(GroceryContract.GroceryEntry.COLUMN_NAME, firstItem);
-        database.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cvItem1); //Must insert one row at a time.
-
-        ContentValues cvItem2 = new ContentValues();
-        cvItem2.put(GroceryContract.GroceryEntry.COLUMN_NAME, secondItem);
-        database.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cvItem2); //Must insert one row at a time.
-
-        ContentValues cvItem3 = new ContentValues();
-        cvItem3.put(GroceryContract.GroceryEntry.COLUMN_NAME, thirdItem);
-        database.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cvItem3); //Must insert one row at a time.
-
-        ContentValues cvItem4 = new ContentValues();
-        cvItem4.put(GroceryContract.GroceryEntry.COLUMN_NAME, lastItem);
-        database.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cvItem4); //Must insert one row at a time.
-
-
-        /* adding SUPERMARKETS to table */
-        Integer lowestUnusedColumnNumber = 1;
-
-        ContentValues cvMarket1 = new ContentValues();
-        cvMarket1.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME, newMarketName1);
-        cvMarket1.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION, newMarketLocation1);
-        cvMarket1.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_FALSE);
-        cvMarket1.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN, lowestUnusedColumnNumber++);
-        database.insert(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET, null, cvMarket1);
-
-        ContentValues cvMarket2 = new ContentValues();
-        cvMarket2.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME, newMarketName2);
-        cvMarket2.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION, newMarketLocation2);
-        cvMarket2.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_FALSE);
-        cvMarket2.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN, lowestUnusedColumnNumber++);
-        database.insert(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET, null, cvMarket2);
-
-        ContentValues cvMarket3 = new ContentValues();
-        cvMarket3.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME, newMarketName3);
-        cvMarket3.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION, newMarketLocation3);
-        cvMarket3.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_TRUE);
-        cvMarket3.put(GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN, lowestUnusedColumnNumber++);
-        database.insert(GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET, null, cvMarket3);
-
-
-        String[] isInListSelectionArgs = new String[]{String.valueOf(SQL_TRUE)};
-        cursorItems = database.query(
-                GroceryContract.GroceryEntry.TABLE_NAME,
-                null,
-                GroceryContract.GroceryEntry.COLUMN_IN_LIST + " =?", //equivalent to WHERE. A filter declaring which rows to return, formatted as an SQL WHERE clause (excluding the WHERE itself). Passing null will return all rows for the given table.
-                isInListSelectionArgs, //You may include ?s in selection, which will be replaced by the values from selectionArgs, in order that they appear in the selection. The values will be bound as Strings.
-                null,
-                null,
-                aisleNumOfItemsInSelectedMarket + " ASC, " + GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
-        );
+        selectedMarketGroceryListColumnName = "market1AisleLocation";
+        cursorItems = DatabaseTestHelper.getGroceryListCursor(database, selectedMarketGroceryListColumnName);
 
         adapter = new GroceryAdapter(cursorItems, context, GroceryAdapter.getSelectedMarketGroceryListColumnName(database));
     }
 
     @After
     public void tearDown() throws Exception {
-        String[] itemNameSelectionArgs = new String[]{firstItem, secondItem, thirdItem, lastItem};
-        database.delete(
-                GroceryContract.GroceryEntry.TABLE_NAME,
-                GroceryContract.GroceryEntry.COLUMN_NAME + " =? OR " +
-                        GroceryContract.GroceryEntry.COLUMN_NAME + " =? OR " +
-                        GroceryContract.GroceryEntry.COLUMN_NAME + " =? OR " +
-                        GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
-                itemNameSelectionArgs);
-
-        String[] marketNamesSelectionArgs = new String[]{newMarketName1, newMarketLocation1, newMarketName2, newMarketLocation2, newMarketName3, newMarketLocation3};
-        database.delete(
-                GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
-                "(" + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
-                        GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?) OR " +
-                        "(" + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
-                        GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?) OR " +
-                        "(" + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
-                        GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?)",
-                marketNamesSelectionArgs);
-
+        DatabaseTestHelper.deleteAllTables(database);
         cursorItems.close();
         database.close();
     }
@@ -147,8 +60,8 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         Integer expectedPosition1 = 0;
         Integer expectedPosition2 = cursorItems.getCount() - 1;
 
-        Integer actualPosition1 = adapter.getItemPosition(firstItem);
-        Integer actualPosition2 = adapter.getItemPosition(lastItem);
+        Integer actualPosition1 = adapter.getItemPosition(DatabaseTestHelper.firstItem);
+        Integer actualPosition2 = adapter.getItemPosition(DatabaseTestHelper.lastItem);
 
         assertEquals(expectedPosition1, actualPosition1);
         assertEquals(expectedPosition2, actualPosition2);
@@ -156,8 +69,8 @@ If you want to use a resource of your test app (e.g. a test input for one of you
 
     @Test
     public void getItemName() {
-        String expectedItemName1 = firstItem;
-        String expectedItemName2 = lastItem;
+        String expectedItemName1 = DatabaseTestHelper.firstItem;
+        String expectedItemName2 = DatabaseTestHelper.lastItem;
 
         int position1 = 0;
         int position2 = cursorItems.getCount() - 1;
@@ -172,8 +85,8 @@ If you want to use a resource of your test app (e.g. a test input for one of you
     @Test
     public void getInTrolleyValue() {
         ContentValues cv = new ContentValues();
-        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_TRUE);
-        String[] mySelectionArgs = {firstItem};
+        cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, DatabaseTestHelper.SQL_TRUE);
+        String[] mySelectionArgs = {DatabaseTestHelper.firstItem};
 
         database.update(GroceryContract.GroceryEntry.TABLE_NAME,
                 cv,
@@ -201,9 +114,9 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         }
 
         List<String> expectedItemNames = new ArrayList<String>();
-        expectedItemNames.add(newMarketName1 + " (" + newMarketLocation1 + ")");
-        expectedItemNames.add(newMarketName2 + " (" + newMarketLocation2 + ")");
-        expectedItemNames.add(newMarketName3 + " (" + newMarketLocation3 + ")");
+        expectedItemNames.add(DatabaseTestHelper.newMarketName1 + " (" + DatabaseTestHelper.newMarketLocation1 + ")");
+        expectedItemNames.add(DatabaseTestHelper.newMarketName2 + " (" + DatabaseTestHelper.newMarketLocation2 + ")");
+        expectedItemNames.add(DatabaseTestHelper.newMarketName3 + " (" + DatabaseTestHelper.newMarketLocation3 + ")");
 
         assertEquals(expectedItemNames, actualItemNames);
     }
@@ -215,10 +128,10 @@ If you want to use a resource of your test app (e.g. a test input for one of you
 
     @Test
     public void getSelectedMarketGroceryListColumnName() {
-        String expetedColumnName1 = "market3AisleLocation";
+        String expectedColumnName1 = "market3AisleLocation";
         String actualColumnName1 = GroceryAdapter.getSelectedMarketGroceryListColumnName(database);
 
-        assertEquals(expetedColumnName1, actualColumnName1);
+        assertEquals(expectedColumnName1, actualColumnName1);
     }
 
     @Test
@@ -226,7 +139,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         String expectedColumnName1 = "market" + 4 + "AisleLocation";
         String actualColumnName1 = "market" + GroceryAdapter.getNewestGroceryListColumnNumber(database) + "AisleLocation";
 
-        String[] marketNamesSelectionArgs2 = new String[]{newMarketName1, newMarketLocation1};
+        String[] marketNamesSelectionArgs2 = new String[]{DatabaseTestHelper.newMarketName1, DatabaseTestHelper.newMarketLocation1};
         database.delete(
                 GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                         "(" + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
@@ -235,7 +148,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         String expectedColumnName2 = "market" + 4 + "AisleLocation";
         String actualColumnName2 = "market" + GroceryAdapter.getNewestGroceryListColumnNumber(database) + "AisleLocation";
 
-        String[] marketNamesSelectionArgs3 = new String[]{newMarketName3, newMarketLocation3};
+        String[] marketNamesSelectionArgs3 = new String[]{DatabaseTestHelper.newMarketName3, DatabaseTestHelper.newMarketLocation3};
         database.delete(
                 GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                 "(" + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
@@ -244,7 +157,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         String expectedColumnName3 = "market" + 3 + "AisleLocation";
         String actualColumnName3 = "market" + GroceryAdapter.getNewestGroceryListColumnNumber(database) + "AisleLocation";
 
-        String[] marketNamesSelectionArgs4 = new String[]{newMarketName2, newMarketLocation2};
+        String[] marketNamesSelectionArgs4 = new String[]{DatabaseTestHelper.newMarketName2, DatabaseTestHelper.newMarketLocation2};
         database.delete(
                 GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                 "(" + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +

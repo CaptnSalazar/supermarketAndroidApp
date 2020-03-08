@@ -34,9 +34,7 @@ import static android.text.TextUtils.isDigitsOnly;
 
 /* this talks about robolex https://developer.android.com/training/testing/unit-testing/local-unit-tests */
 
-/* 1) Figure out what branching is and if it can help you not delete git stuff permanently like you would if you roll back to previous commit.
-2) Roll back to your latest git commit. Then, make a function called getSelectedMarketName that queries the supermaket
-table (if it's full, else return market1AisleLocation) and returns the relativeID (i.e. the row value of groceryListColumnNumber) formatted as marketXAisleLocation !!!!!!!!!!!!!!!!!!!!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
+/* 1) Figure out what branching is and if it can help you not delete git stuff permanently like you would if you roll back to previous commit. <<<<<<<*/
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity*<*<*<*<*<*";
     private SQLiteDatabase mDatabase;
@@ -521,6 +519,8 @@ public class MainActivity extends AppCompatActivity {
     Future implementations:
 
     for some reason, when you save aisles it doesn't save the aisle number and refreshes as ? !!! <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+    Done: 0) when you try to add an item and there is no supermarket selected, it just automatically makes it market1AisleLocation
 
     0.5) When you press "Edit Spinner", a window pops up (OR MAYBE WE START ANOTHER ACTIVITY??) that has a "negative" button/option of "change name", and
     a "positive" button/option of "add new". If you press change name, a picker pops up for you to select/find the

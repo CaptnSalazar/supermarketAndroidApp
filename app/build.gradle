@@ -18,6 +18,7 @@ android {
         }
     }
     testOptions {
+        //animationsDisabled = true //maybe add this to remove animation when testing UI with Espresso?
         unitTests {
             includeAndroidResources = true
         }
