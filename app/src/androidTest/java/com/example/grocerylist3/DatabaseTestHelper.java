@@ -17,6 +17,8 @@ import java.util.List;
 import static org.junit.Assert.*;
 
 public class DatabaseTestHelper {
+    public static final String TEST_DATABASE_NAME = "grocerylist3test.db";
+
     public static String firstItem = "Aaapple";
     public static String secondItem = "Aabpple";
     public static String thirdItem = "Aacpple";

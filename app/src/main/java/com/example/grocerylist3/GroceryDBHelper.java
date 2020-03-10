@@ -14,6 +14,11 @@ public class GroceryDBHelper extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
+    //Overloading: when you have methods with the same name but different parameters are accepted. One use is to replace Python's optional parameters.
+    public GroceryDBHelper(Context context, String databaseName) {
+        super(context, databaseName, null, DATABASE_VERSION);
+    }
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         final String SQL_CREATE_GROCERYLIST_TABLE = "CREATE TABLE " +

@@ -35,7 +35,7 @@ So when you are writing your tests and you want to load a resource of your real 
 If you want to use a resource of your test app (e.g. a test input for one of your tests) then call getContext(). */
         //Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         Context context = ApplicationProvider.getApplicationContext();
-        dbHelper = new GroceryDBHelper(context);
+        dbHelper = new GroceryDBHelper(context, DatabaseTestHelper.TEST_DATABASE_NAME);
         database = dbHelper.getWritableDatabase(); //Create and/or open a database that will be used for reading and writing.
 
         DatabaseTestHelper.populateTableGroceryList(database);
