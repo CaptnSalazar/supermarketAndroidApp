@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
@@ -15,6 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -43,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     boolean mSwipeable;
-    private EditText mEditTextName;
+    private EditText editTextNewItemName;
     private ToggleButton toggleEditAisle;
     private ToggleButton toggleDelete;
 
@@ -59,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     //@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate() called");
+        //Log.d(TAG, "onCreate() called");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -77,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         String messageNewMarket = intent.getStringExtra(EditSuperMarketsInfo.EXTRA_MESSAGE_MARKET_INFO);
         //If we didn't check this, then the app would crash when it started.
         if (messageNewMarket != null) {
-            Log.d(TAG, "onCreate: the new market is: " + messageNewMarket);
+            //Log.d(TAG, "onCreate: the new market is: " + messageNewMarket);
             addMarket(messageNewMarket);
         }*/
 
@@ -91,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
         //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("green")));
         setToggleEditAisleListener();
 
-        mEditTextName = findViewById(R.id.edittext_new_product);
+        editTextNewItemName = findViewById(R.id.editTextNewItem);
 
         setRecyclerViewSwipeListener();
 
@@ -118,18 +120,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d(TAG, "onPause: >>>>>>closing all cursors<<<<<<<<");
+        //Log.d(TAG, "onPause: >>>>>>closing all cursors<<<<<<<<");
         mAdapter.closeAllCursors();
         if (mAdapter.areAllCursorsClosed()) {
-            Log.d(TAG, "onPause: all cursors are   C L O S E D <<<<<<<<<<<<<<<");
+            //Log.d(TAG, "onPause: all cursors are   C L O S E D <<<<<<<<<<<<<<<");
         } else {
-            Log.d(TAG, "onPause: all cursors are   N O T   closed  :(((((((((((");
+            //Log.d(TAG, "onPause: all cursors are   N O T   closed  :(((((((((((");
         }
     }
 
 
+
+
+
     public void onDeleteAllRows(View view) {
-        Log.d(TAG, "onDeleteAllRows() called");
         mDatabase.execSQL("DELETE FROM " + GroceryContract.GroceryEntry.TABLE_NAME);
         mDatabase.execSQL("DELETE FROM " + GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET);
 
@@ -165,14 +169,14 @@ public class MainActivity extends AppCompatActivity {
          * update it, it means the item isn't on it, so insert the new item. Then scroll to the position
          * of the item - including if the item was already on the recyclerview list. */
 
-//        Log.d(TAG, "addItem() called");
-//        Log.d(TAG, "inside addItem and toggleEditAisle value is " + toggleEditAisle.isChecked());
-//        Log.d(TAG, "inside addItem and toggleDelete value is " + toggleDelete.isChecked());
-        if (mEditTextName.getText().toString().trim ().length() == 0) {
+//        //Log.d(TAG, "addItem() called");
+//        //Log.d(TAG, "inside addItem and toggleEditAisle value is " + toggleEditAisle.isChecked());
+//        //Log.d(TAG, "inside addItem and toggleDelete value is " + toggleDelete.isChecked());
+        if (editTextNewItemName.getText().toString().trim ().length() == 0) {
             return;
         }
 
-        String name = mEditTextName.getText().toString();
+        String name = editTextNewItemName.getText().toString();
         String nameCapitalised = name.substring(0, 1).toUpperCase() + name.substring(1);
 
         ContentValues cv = new ContentValues();
@@ -184,19 +188,19 @@ public class MainActivity extends AppCompatActivity {
                 cv,
                 GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
                 mySelectionArgs);
-        Log.d("MainActivity", "number of rows updated: " + numRowsUpdated);
+        //Log.d("MainActivity", "number of rows updated: " + numRowsUpdated);
         if (numRowsUpdated < 1) {
             mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
         }
         mAdapter.swapCursorGrocery(getAllItems());
 
-        mEditTextName.getText().clear();
+        editTextNewItemName.getText().clear();
         recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised));
     }
 
 
     public void onEditSpinner(View view) {
-        Log.d(TAG, "onEditSpinner: ");
+        //Log.d(TAG, "onEditSpinner: ");
         /*Intent intent = new Intent(this, EditSuperMarketsInfo.class);
         startActivity(intent);*/
         setLayoutEditSpinner();
@@ -204,20 +208,23 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void onCancel(View view) {
-        Log.d(TAG, "onCancel: ");
+        //Log.d(TAG, "onCancel: ");
         setLayoutEditSpinner();
     }
 
 
     public void onConfirm(View view) {
-        Log.d(TAG, "onConfirm: ");
+        //Log.d(TAG, "onConfirm: ");
 
         EditText editTextName = findViewById(R.id.editTextMarketName);
         String newMarketName = editTextName.getText().toString().trim();
         EditText editTextLocation = findViewById(R.id.editTextMarketLocation);
         String newMarketLocation = editTextLocation.getText().toString().trim();
 
-        if ((newMarketName.length() > 0) && (newMarketLocation.length() > 0)){
+        if (GroceryAdapter.marketIsAlreadyInTable(mDatabase, newMarketName, newMarketLocation)) {
+            closeKeyboard();
+            Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_market_already_in_table, Snackbar.LENGTH_SHORT).show();
+        } else if ((newMarketName.length() > 0) && (newMarketLocation.length() > 0)){
 
             addMarketToTable(newMarketName, newMarketLocation);
 
@@ -250,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void selectedMarketUpdate(String selectedMarketName, String selectedMarketLocation) {
-        Log.d(TAG, "selectedMarketUpdate: making isSelected true in only " + selectedMarketName + " (" + selectedMarketLocation + ")");
+        //Log.d(TAG, "selectedMarketUpdate: making isSelected true in only " + selectedMarketName + " (" + selectedMarketLocation + ")");
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED, SQL_FALSE);
         String[] selectionArgsForSelectedMarket = {selectedMarketName , selectedMarketLocation};
@@ -285,6 +292,9 @@ public class MainActivity extends AppCompatActivity {
         EditText editTextLocation = findViewById(R.id.editTextMarketLocation);
         Button confirmButton = findViewById(R.id.buttonConfirm);
         Button cancelButton = findViewById(R.id.buttonCancel);
+        Button buttonAddItem = findViewById(R.id.buttonAddItem);
+
+        Button buttonDeleteAll = findViewById(R.id.button_delete_all);
 
         if (mIsSpinnerBeingEdited) {
             buttonEditSpinner.setText(getString(R.string.spinner_edit_back));
@@ -294,9 +304,16 @@ public class MainActivity extends AppCompatActivity {
             editTextLocation.setVisibility(View.VISIBLE);
             confirmButton.setVisibility(View.VISIBLE);
             cancelButton.setVisibility(View.VISIBLE);
+
             recyclerView.setVisibility(View.GONE);
+            buttonAddItem.setVisibility(View.GONE);
+            editTextNewItemName.setVisibility(View.GONE);
+            toggleEditAisle.setVisibility(View.GONE);
+            toggleDelete.setVisibility(View.GONE);
+            buttonDeleteAll.setVisibility(View.GONE);
+
+
         } else {
-            buttonEditSpinner.setText(getString(R.string.spinner_edit));
             textViewName.setVisibility(View.GONE);
             editTextName.setVisibility(View.GONE);
             textViewLocation.setVisibility(View.GONE);
@@ -304,8 +321,16 @@ public class MainActivity extends AppCompatActivity {
             editTextName.setVisibility(View.GONE);
             confirmButton.setVisibility(View.GONE);
             cancelButton.setVisibility(View.GONE);
-            recyclerView.setVisibility(View.VISIBLE);
 
+            recyclerView.setVisibility(View.VISIBLE);
+            buttonAddItem.setVisibility(View.VISIBLE);
+            editTextNewItemName.setVisibility(View.VISIBLE);
+            toggleEditAisle.setVisibility(View.VISIBLE);
+            toggleDelete.setVisibility(View.VISIBLE);
+            buttonDeleteAll.setVisibility(View.VISIBLE);
+
+            closeKeyboard();
+            buttonEditSpinner.setText(getString(R.string.spinner_edit));
             editTextName.getText().clear();
             editTextLocation.getText().clear();
         }
@@ -337,7 +362,7 @@ public class MainActivity extends AppCompatActivity {
                     cv,
                     GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
                     mySelectionArgs);
-            Log.d("MainActivity", "number of rows updated: " + numRowsUpdated);
+            //Log.d("MainActivity", "number of rows updated: " + numRowsUpdated);
         } else {
             Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
         }
@@ -351,10 +376,10 @@ public class MainActivity extends AppCompatActivity {
         toggleDelete.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    Log.d(TAG, "toggleDelete is checked");
+                    //Log.d(TAG, "toggleDelete is checked");
                     mSwipeable = true; // make list swipeable
                 } else {
-                    Log.d(TAG, "toggleDelete is NOT checked");
+                    //Log.d(TAG, "toggleDelete is NOT checked");
                     mSwipeable = false; // make list unswipeable
                     //saveAisles(); <Wrong. This was for the toggleEditAisle, not toggleDeleteAisle
                 }
@@ -368,14 +393,18 @@ public class MainActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    Log.d(TAG, "toggleEditAisle is checked");
+                    //Log.d(TAG, "toggleEditAisle is checked");
                     toggleEditAisle.setTextColor(Color.RED);
                     //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("red")));
                 } else {
-                    Log.d(TAG, "toggleEditAisle is NOT checked");
+                    //Log.d(TAG, "toggleEditAisle is NOT checked");
                     toggleEditAisle.setTextColor(Color.GREEN);
                     //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("green")));
-                    saveAisles();
+                    if (GroceryAdapter.marketTableIsNotEmpty(mDatabase)) {
+                        saveAisles();
+                    } else {
+                        Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_add_a_supermarket, Snackbar.LENGTH_SHORT).show();
+                    }
                 }
             }
         });
@@ -383,18 +412,18 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void saveAisles() {
-        Log.d(TAG, "saveAisles() called");
+        //Log.d(TAG, "saveAisles() called");
         View v; // v will be each item (i.e. one set of aisleNumber, productName, checkBox views) in recyclerview.
         for (int i = 0; i < recyclerView.getChildCount(); i++) {
-            Log.d(TAG, "saveAisles: we are at the " + String.valueOf(i) + "th value of the recyclerview ------");
+            //Log.d(TAG, "saveAisles: we are at the " + String.valueOf(i) + "th value of the recyclerview ------");
             v = recyclerView.getChildAt(i); // v encapsulates a pair of aisle editText and product name EditText.
             EditText aisleEditText = v.findViewById(R.id.edittext_aisle_number);
             EditText productNameEditText = v.findViewById(R.id.edittext_product_name);
             String aisleNumberStr = aisleEditText.getText().toString();
             String productNameStr = productNameEditText.getText().toString();
-            Log.d(TAG, "saveAisles: aisle found --> " + aisleNumberStr);
-            Log.d(TAG, "saveAisles: product found --> " + productNameStr);
-            Log.d(TAG, "saveAisles: selectedMarketGroceryColumnName: " + GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase));
+            //Log.d(TAG, "saveAisles: aisle found --> " + aisleNumberStr);
+            //Log.d(TAG, "saveAisles: product found --> " + productNameStr);
+            //Log.d(TAG, "saveAisles: selectedMarketGroceryColumnName: " + GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase));
             updateAisle(aisleNumberStr, productNameStr);
             //aisleEditText.setKeyListener(null); //makes the EditText non-editable so, it acts like a TextView.
         }
@@ -402,7 +431,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void updateAisle(String aisleNumberStr, String productNameStr) {
-        Log.d(TAG, "updateAisle() called");
+        //Log.d(TAG, "updateAisle() called");
         if (isDigitsOnly(aisleNumberStr) && (aisleNumberStr.length() > 0) && (productNameStr.length() > 0)) {
             ContentValues cv = new ContentValues();
             cv.put(GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase), Integer.parseInt(aisleNumberStr));
@@ -412,7 +441,7 @@ public class MainActivity extends AppCompatActivity {
                     cv,
                     GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
                     mySelectionArgs);
-            Log.d(TAG, "updateAisle: number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
+            //Log.d(TAG, "updateAisle: number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
             mAdapter.swapCursorGrocery(getAllItems());
         }
     }
@@ -457,7 +486,7 @@ public class MainActivity extends AppCompatActivity {
                 cv,
                 GroceryContract.GroceryEntry._ID + " =?",
                 mySelectionArgs);
-        Log.d(TAG, "number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed.
+        //Log.d(TAG, "number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed.
         mAdapter.swapCursorGrocery(getAllItems());
     }
 
@@ -467,10 +496,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedMarket = parent.getItemAtPosition(position).toString();
-                Log.d(TAG, "onItemSelected:  updating table so that only " + selectedMarket + " has true value of IsSelected");
+                //Log.d(TAG, "onItemSelected:  updating table so that only " + selectedMarket + " has true value of IsSelected");
                 String[] marketInfo = Market.extractNameAndLocation(selectedMarket);
                 //MAKE SURE THE USER CANNOT INPUT '(' AS IN MARKET NAME OR LOCATION OTHERWISE THIS WILL HAVE BUGS.
-                Log.d(TAG, "onItemSelected:  market name is " + marketInfo[0] + ", and location is: " + marketInfo[1]);
+                //Log.d(TAG, "onItemSelected:  market name is " + marketInfo[0] + ", and location is: " + marketInfo[1]);
                 selectedMarketUpdate(marketInfo[0], marketInfo[1]);
             }
 
@@ -483,7 +512,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private Cursor getAllItems() {
-        Log.d(TAG, "getAllItems() called");
+        //Log.d(TAG, "getAllItems() called");
         String[] mySelectionArgs = new String[]{String.valueOf(SQL_TRUE)};
         return mDatabase.query(
                 GroceryContract.GroceryEntry.TABLE_NAME,
@@ -494,6 +523,15 @@ public class MainActivity extends AppCompatActivity {
                 null,
                 GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase) + " ASC, " + GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
         );
+    }
+
+    public void closeKeyboard() {
+        View view = findViewById(R.id.spinner);
+        if (view != null) {
+            //Log.d("MainActivitee", "Inside if statement of closeKeboard().");
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
     }
 
     /*

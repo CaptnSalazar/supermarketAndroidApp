@@ -18,6 +18,8 @@
         </activity>
 
         <activity android:name=".MainActivity">
+            <!-- The following line makes sure snackbar pops up even softkeyboard is open -->
+            android:windowSoftInputMode="adjustResize"
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

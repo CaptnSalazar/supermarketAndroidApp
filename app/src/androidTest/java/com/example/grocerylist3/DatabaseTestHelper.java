@@ -35,9 +35,9 @@ public class DatabaseTestHelper {
     public static final int SQL_FALSE = 0;
 
 
-    static public void deleteAllTables(SQLiteDatabase database) {
+    static public void deleteAllTestTables(SQLiteDatabase testDatabase) {
         String[] itemNameSelectionArgs = new String[]{firstItem, secondItem, thirdItem, lastItem};
-        database.delete(
+        testDatabase.delete(
                 GroceryContract.GroceryEntry.TABLE_NAME,
                 GroceryContract.GroceryEntry.COLUMN_NAME + " =? OR " +
                         GroceryContract.GroceryEntry.COLUMN_NAME + " =? OR " +
@@ -46,7 +46,7 @@ public class DatabaseTestHelper {
                 itemNameSelectionArgs);
 
         String[] marketNamesSelectionArgs = new String[]{newMarketName1, newMarketLocation1, newMarketName2, newMarketLocation2, newMarketName3, newMarketLocation3};
-        database.delete(
+        testDatabase.delete(
                 GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                 "(" + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
                         GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?) OR " +

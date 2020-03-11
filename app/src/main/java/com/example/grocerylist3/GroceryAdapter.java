@@ -225,6 +225,37 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         return selectedMarketGroceryListColumnName;
     }
 
+    static public boolean marketTableIsNotEmpty(SQLiteDatabase database) {
+        Cursor cursorMarkets = database.query(
+                GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        boolean moveSucceeded = cursorMarkets.moveToFirst();
+        cursorMarkets.close();
+        return moveSucceeded;
+    }
+
+    static public boolean marketIsAlreadyInTable(SQLiteDatabase database, String newMarketName, String newMarketLocation) {
+        String[] selectionArgs = {newMarketName, newMarketLocation};
+        Cursor cursorMarkets = database.query(
+                GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
+                null,
+                GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
+                        GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?",
+                selectionArgs,
+                null,
+                null,
+                null
+        );
+        boolean moveSucceeded = cursorMarkets.moveToFirst();
+        return moveSucceeded;
+    }
+
     static public int getNewestGroceryListColumnNumber(SQLiteDatabase database) {
         Cursor cursorMarkets = database.query(
                 GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,

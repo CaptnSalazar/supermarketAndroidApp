@@ -19,7 +19,7 @@ import static org.junit.Assert.*;
 public class GroceryAdapterTest {
     GroceryAdapter adapter;
     GroceryDBHelper dbHelper;
-    SQLiteDatabase database;
+    SQLiteDatabase testDatabase;
     Cursor cursorItems;
 
     String selectedMarketGroceryListColumnName;
@@ -36,23 +36,23 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         //Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
         Context context = ApplicationProvider.getApplicationContext();
         dbHelper = new GroceryDBHelper(context, DatabaseTestHelper.TEST_DATABASE_NAME);
-        database = dbHelper.getWritableDatabase(); //Create and/or open a database that will be used for reading and writing.
+        testDatabase = dbHelper.getWritableDatabase(); //Create and/or open a testDatabase that will be used for reading and writing.
 
-        DatabaseTestHelper.populateTableGroceryList(database);
+        DatabaseTestHelper.populateTableGroceryList(testDatabase);
 
-        DatabaseTestHelper.populateTableSupermarkets(database);
+        DatabaseTestHelper.populateTableSupermarkets(testDatabase);
 
         selectedMarketGroceryListColumnName = "market1AisleLocation";
-        cursorItems = DatabaseTestHelper.getGroceryListCursor(database, selectedMarketGroceryListColumnName);
+        cursorItems = DatabaseTestHelper.getGroceryListCursor(testDatabase, selectedMarketGroceryListColumnName);
 
-        adapter = new GroceryAdapter(cursorItems, context, GroceryAdapter.getSelectedMarketGroceryListColumnName(database));
+        adapter = new GroceryAdapter(cursorItems, context, GroceryAdapter.getSelectedMarketGroceryListColumnName(testDatabase));
     }
 
     @After
     public void tearDown() throws Exception {
-        DatabaseTestHelper.deleteAllTables(database);
+        DatabaseTestHelper.deleteAllTestTables(testDatabase);
         cursorItems.close();
-        database.close();
+        testDatabase.close();
     }
 
     @Test
@@ -88,7 +88,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, DatabaseTestHelper.SQL_TRUE);
         String[] mySelectionArgs = {DatabaseTestHelper.firstItem};
 
-        database.update(GroceryContract.GroceryEntry.TABLE_NAME,
+        testDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
                 cv,
                 GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
                 mySelectionArgs);
@@ -105,7 +105,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
 
     @Test
     public void getMarketsList() {
-        List<Market> marketsList = adapter.getMarketsList(database);
+        List<Market> marketsList = adapter.getMarketsList(testDatabase);
 
         List<String> actualItemNames = new ArrayList<String>();
         int marketsListSize = marketsList.size();
@@ -129,7 +129,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
     @Test
     public void getSelectedMarketGroceryListColumnName() {
         String expectedColumnName1 = "market3AisleLocation";
-        String actualColumnName1 = GroceryAdapter.getSelectedMarketGroceryListColumnName(database);
+        String actualColumnName1 = GroceryAdapter.getSelectedMarketGroceryListColumnName(testDatabase);
 
         assertEquals(expectedColumnName1, actualColumnName1);
     }
@@ -137,34 +137,34 @@ If you want to use a resource of your test app (e.g. a test input for one of you
     @Test
     public void getNewestGroceryListColumnName() {
         String expectedColumnName1 = "market" + 4 + "AisleLocation";
-        String actualColumnName1 = "market" + GroceryAdapter.getNewestGroceryListColumnNumber(database) + "AisleLocation";
+        String actualColumnName1 = "market" + GroceryAdapter.getNewestGroceryListColumnNumber(testDatabase) + "AisleLocation";
 
         String[] marketNamesSelectionArgs2 = new String[]{DatabaseTestHelper.newMarketName1, DatabaseTestHelper.newMarketLocation1};
-        database.delete(
+        testDatabase.delete(
                 GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                         "(" + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
                         GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?)",
                 marketNamesSelectionArgs2);
         String expectedColumnName2 = "market" + 4 + "AisleLocation";
-        String actualColumnName2 = "market" + GroceryAdapter.getNewestGroceryListColumnNumber(database) + "AisleLocation";
+        String actualColumnName2 = "market" + GroceryAdapter.getNewestGroceryListColumnNumber(testDatabase) + "AisleLocation";
 
         String[] marketNamesSelectionArgs3 = new String[]{DatabaseTestHelper.newMarketName3, DatabaseTestHelper.newMarketLocation3};
-        database.delete(
+        testDatabase.delete(
                 GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                 "(" + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
                         GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?)",
                 marketNamesSelectionArgs3);
         String expectedColumnName3 = "market" + 3 + "AisleLocation";
-        String actualColumnName3 = "market" + GroceryAdapter.getNewestGroceryListColumnNumber(database) + "AisleLocation";
+        String actualColumnName3 = "market" + GroceryAdapter.getNewestGroceryListColumnNumber(testDatabase) + "AisleLocation";
 
         String[] marketNamesSelectionArgs4 = new String[]{DatabaseTestHelper.newMarketName2, DatabaseTestHelper.newMarketLocation2};
-        database.delete(
+        testDatabase.delete(
                 GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
                 "(" + GroceryContract.SupermarketsVisited.COLUMN_MARKET_NAME + " =? AND " +
                         GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION + " =?)",
                 marketNamesSelectionArgs4);
         String expectedColumnName4 = "market" + 1 + "AisleLocation";
-        String actualColumnName4 = "market" + GroceryAdapter.getNewestGroceryListColumnNumber(database) + "AisleLocation";
+        String actualColumnName4 = "market" + GroceryAdapter.getNewestGroceryListColumnNumber(testDatabase) + "AisleLocation";
 
         assertEquals(expectedColumnName1, actualColumnName1);
         assertEquals(expectedColumnName2, actualColumnName2);
