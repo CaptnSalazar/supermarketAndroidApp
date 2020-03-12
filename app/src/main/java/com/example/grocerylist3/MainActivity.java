@@ -223,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (GroceryAdapter.marketIsAlreadyInTable(mDatabase, newMarketName, newMarketLocation)) {
             closeKeyboard();
+            // MAYBE INSTEAD OF SNACKBAR, MAKE A TEXTVIEW APPEAR SAYING IN RED, "MarketName (Location) already exists."
             Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_market_already_in_table, Snackbar.LENGTH_SHORT).show();
         } else if ((newMarketName.length() > 0) && (newMarketLocation.length() > 0)){
 
@@ -559,8 +560,6 @@ public class MainActivity extends AppCompatActivity {
 
     Note: when you try to add an item and there is no supermarket selected, it just automatically makes it market1AisleLocation
 
-    >> Add tests for the UI, e.g. when I add an item, is it displayed on the recyclerview. When I change that item's aisle, number does it
-    save properly? When I select a different market, does the aisle number change accordingly?
     >> When you press "Edit Spinner", a window pops up (OR MAYBE WE START ANOTHER ACTIVITY??) that has a "negative" button/option of "change name", and
     a "positive" button/option of "add new". If you press change name, a picker pops up for you to select/find the
     market name you wanna change and 2 editTexts one above the other appear with text to their left saying

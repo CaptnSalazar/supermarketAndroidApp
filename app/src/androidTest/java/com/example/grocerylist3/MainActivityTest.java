@@ -6,12 +6,15 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
+import androidx.test.espresso.DataInteraction;
+import androidx.test.espresso.ViewInteraction;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.hamcrest.TypeSafeMatcher;
 import org.junit.Before;
 import org.junit.Rule;
@@ -21,11 +24,17 @@ import org.junit.runner.RunWith;
 import static androidx.test.espresso.Espresso.onData;
 import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.replaceText;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+import static androidx.test.espresso.matcher.ViewMatchers.isChecked;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.isNotChecked;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
+import static androidx.test.espresso.matcher.ViewMatchers.withSpinnerText;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
@@ -47,13 +56,10 @@ You know that when you do instrumentation tests on Android then you have two app
     The test app, that executes your test logic and tests your "real" app
     The "real" app (that your users will see)
 So when you are writing your tests and you want to load a resource of your real app, use getTargetContext().
-If you want to use a resource of your test app (e.g. a test input for one of your tests) then call getContext(). */
-    /*Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+If you want to use a resource of your test app (e.g. a test input for one of your tests) then call getContext().
+    Context context = InstrumentationRegistry.getInstrumentation().getTargetContext(); */
 
-    @Before
-    public void setUp() throws Exception {
-        //Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
-    } */
+    SQLiteDatabase database;
 
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new ActivityTestRule<>(MainActivity.class);
@@ -65,10 +71,11 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
         //clear grocerylist3.db
         GroceryDBHelper dbHelper = new GroceryDBHelper(appContext);
-        SQLiteDatabase database = dbHelper.getWritableDatabase(); //Create and/or open a testDatabase that will be used for reading and writing.
+        database = dbHelper.getWritableDatabase(); //Create and/or open a testDatabase that will be used for reading and writing.
         database.execSQL("DELETE FROM " + GroceryContract.GroceryEntry.TABLE_NAME);
         database.execSQL("DELETE FROM " + GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET);
     }
+
 
     @Test
     public void addingItemTest() {
@@ -79,24 +86,9 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         onView(withId(R.id.editTextNewItem)).check(matches(withText(""))); //editTextNewItem should be cleared when we press "Add"
     }
 
+
     @Test
-    public void addingMarketTest() throws InterruptedException {
-        /*pseudocode:
-        press "Edit"
-        enter supermarket name and location
-        press confirm
-        check that the spinner displays the added supermarket
-        (Didn't execute/perform pseudocode as actual code from here onwards)
-        check that the views visible and gone are as they should be
-
-        get the spinner size
-        press "Edit"
-        enter the same supermarket name and location
-        press confirm
-        check that the spinner size is the same
-        check that the views visible and gone are as they should be
-        */
-
+    public void addingMarketTest() {
         /* I think this might not be right but I kept it just in case:
         https://stackoverflow.com/questions/28431647/matchesnotisdisplayed-fails-with-nomatchingviewexception
         If the view is there in the view hierarchy but in an invisible state (visibility is set
@@ -128,10 +120,154 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         onView(withId(R.id.buttonConfirm));
         onView(withId(R.id.buttonConfirm)).perform(click());
 
+        // https://stackoverflow.com/questions/37184933/espresso-ondata-error-performing-load-adapter-data-on-view
         onData(instanceOf(Market.class)).atPosition(0).check(matches(withText("Aaa Loja (Brazil)"))); //this works
         //because the market already existed in spinner, pressing confirm will make app stay in "market editing mode".
         checkViewsDisplayedWhileEditingMarket();
     }
+
+
+    //This test sometimes doesn't work for some reason, especially if you run all the tests at once.
+    @Test
+    public void tickingItemInList() {
+        DatabaseTestHelper.populateTableGroceryList(database);
+//        ViewInteraction appCompatEditText = onView(
+//                Matchers.allOf(withId(R.id.editTextNewItem),
+//                        childAtPosition(
+//                                Matchers.allOf(withId(R.id.rootLayout),
+//                                        childAtPosition(
+//                                                withId(android.R.id.content),
+//                                                0)),
+//                                0),
+//                        isDisplayed()));
+//        appCompatEditText.perform(click());
+//
+//        ViewInteraction appCompatEditText2 = onView(
+//                Matchers.allOf(withId(R.id.editTextNewItem),
+//                        childAtPosition(
+//                                Matchers.allOf(withId(R.id.rootLayout),
+//                                        childAtPosition(
+//                                                withId(android.R.id.content),
+//                                                0)),
+//                                0),
+//                        isDisplayed()));
+//        appCompatEditText2.perform(replaceText("jui"), closeSoftKeyboard());
+//
+//        ViewInteraction appCompatButton = onView(
+//                Matchers.allOf(withId(R.id.buttonAddItem), withText("Add"),
+//                        childAtPosition(
+//                                Matchers.allOf(withId(R.id.rootLayout),
+//                                        childAtPosition(
+//                                                withId(android.R.id.content),
+//                                                0)),
+//                                1),
+//                        isDisplayed()));
+//        appCompatButton.perform(click());
+//
+//        ViewInteraction editText = onView(
+//                Matchers.allOf(withId(R.id.edittext_product_name), withText("Jui"),
+//                        childAtPosition(
+//                                childAtPosition(
+//                                        withId(R.id.recyclerview),
+//                                        3), //juice is the fourth item out of five (indexed 0-4)
+//                                1),
+//                        isDisplayed()));
+//        editText.check(matches(withText("Jui")));
+        ViewInteraction editTextFirstItem = onView(
+                Matchers.allOf(withId(R.id.edittext_product_name), withText(DatabaseTestHelper.firstItem),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(R.id.recyclerview),
+                                        0),
+                                1),
+                        isDisplayed()));
+        editTextFirstItem.check(matches(withText(DatabaseTestHelper.firstItem)));
+
+        ViewInteraction editTextSecondItem = onView(
+                Matchers.allOf(withId(R.id.edittext_product_name), withText(DatabaseTestHelper.secondItem),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(R.id.recyclerview),
+                                        1),
+                                1),
+                        isDisplayed()));
+        editTextSecondItem.check(matches(withText(DatabaseTestHelper.secondItem)));
+
+        //I think trying to get the third item doesn't work because the app has the softkeyboard open.
+        closeKeyboardByAddingPreExistingItemThatYouWannaCheck(DatabaseTestHelper.thirdItem);
+        ViewInteraction editTextThirdItem = onView(
+                Matchers.allOf(withId(R.id.edittext_product_name), withText(DatabaseTestHelper.thirdItem),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(R.id.recyclerview),
+                                        2),
+                                1),
+                        isDisplayed()));
+        editTextThirdItem.check(matches(withText(DatabaseTestHelper.thirdItem)));
+
+        ViewInteraction checkBoxThirdItem = onView(
+                Matchers.allOf(withId(R.id.checkBox),
+                        childAtPosition(
+                                childAtPosition(
+                                        withId(R.id.recyclerview),
+                                        2),
+                                2),
+                        isDisplayed()));
+        checkBoxThirdItem.check(matches(isNotChecked()));
+        checkBoxThirdItem.perform(click());
+        checkBoxThirdItem.check(matches(isChecked()));
+
+        // Maybe check what happens when you select a different market?
+    }
+
+
+    // THIS TEST SOMETIMES PASSES AND SOMETIMES FAILS
+    @Test
+    public void spinnerTest() {
+        DatabaseTestHelper.populateTableGroceryList(database);
+        DatabaseTestHelper.populateTableSupermarkets(database);
+
+        String firstSelectedMarket = DatabaseTestHelper.newMarketName3 + " (" + DatabaseTestHelper.newMarketLocation3 + ")";
+        onView(withId(R.id.spinner)).check(matches(withSpinnerText(containsString(firstSelectedMarket))));
+
+        String newSelectedMarket = DatabaseTestHelper.newMarketName1 + " (" + DatabaseTestHelper.newMarketLocation1 + ")";
+        onView(withId(R.id.spinner)).perform(click());
+        onData(instanceOf(Market.class)).atPosition(0).perform(click());
+
+        onView(withId(R.id.spinner)).check(matches(withSpinnerText(containsString(newSelectedMarket))));
+    }
+
+
+    private void closeKeyboardByAddingPreExistingItemThatYouWannaCheck(String itemName) {
+        ViewInteraction appCompatEditText = onView(
+                Matchers.allOf(withId(R.id.editTextNewItem),
+                        childAtPosition(Matchers.allOf(withId(R.id.rootLayout), childAtPosition(withId(android.R.id.content),0)),0),
+                        isDisplayed()));
+        appCompatEditText.perform(click());
+
+        ViewInteraction appCompatEditText2 = onView(
+                Matchers.allOf(withId(R.id.editTextNewItem),
+                        childAtPosition(
+                                Matchers.allOf(withId(R.id.rootLayout),
+                                        childAtPosition(
+                                                withId(android.R.id.content),
+                                                0)),
+                                0),
+                        isDisplayed()));
+        appCompatEditText2.perform(replaceText(itemName), closeSoftKeyboard());
+
+        ViewInteraction appCompatButton = onView(
+                Matchers.allOf(withId(R.id.buttonAddItem), withText("Add"),
+                        childAtPosition(
+                                Matchers.allOf(withId(R.id.rootLayout),
+                                        childAtPosition(
+                                                withId(android.R.id.content),
+                                                0)),
+                                1),
+                        isDisplayed()));
+        appCompatButton.perform(click());
+    }
+
 
     private void checkViewsDisplayedWhenNotEditingMarket() {
         onView(withId(R.id.editTextMarketName)).check(matches(not(isDisplayed())));
@@ -148,6 +284,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         onView(withId(R.id.recyclerview)).check(matches(isDisplayed()));
     }
 
+
     private void checkViewsDisplayedWhileEditingMarket() {
         onView(withId(R.id.editTextMarketName)).check(matches(isDisplayed()));
         onView(withId(R.id.editTextMarketLocation)).check(matches(isDisplayed()));
@@ -162,6 +299,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         onView(withId(R.id.toggleButtonEditSave)).check(matches(not(isDisplayed())));
         onView(withId(R.id.recyclerview)).check(matches(not(isDisplayed())));
     }
+
 
     private static Matcher<View> childAtPosition(
             final Matcher<View> parentMatcher, final int position) {
