@@ -2,6 +2,7 @@ package com.example.grocerylist3;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -9,12 +10,14 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -31,8 +34,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.text.TextUtils.isDigitsOnly;
+import java.util.regex.Pattern;
 
 
 /* >> Figure out what branching is and if it can help you not delete git stuff permanently like you would if you roll back to previous commit. <<<<<<<*/
@@ -53,9 +55,10 @@ public class MainActivity extends AppCompatActivity {
     List<Market> spinnerMarketArray; //I think THIS DOESN'T HAVE TO BE GLOBAL.
     ArrayAdapter<Market> spinnerArrayAdapter;
     private boolean mIsSpinnerBeingEdited = false;
-
     private final Integer SQL_TRUE = 1;
     private final Integer SQL_FALSE = 0;
+    private int UNACCEPTABLE_AISLE = 1;
+    private int EMPTY_TEXT = 2;
 
 
     //@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -83,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
             addMarket(messageNewMarket);
         }*/
 
-        setCheckBoxListener();
+        setRecyclerViewListeners();
 
         toggleDelete = findViewById(R.id.toggleButtonDeleteItem);
         setToggleDeleteListener();
@@ -107,11 +110,14 @@ public class MainActivity extends AppCompatActivity {
         spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); //each item in the spinner will look like this when you click the spinner (with radio buttons).
         spinner.setAdapter(spinnerArrayAdapter);
         if (spinnerMarketArray.size() > 0) { // In the actual app, spinnerMarketArray.size() will only be 0 before a supermarket has been added.
-            TextView textviewSpinnerEmpty = findViewById(R.id.textViewSpinnerEmpty);
-            textviewSpinnerEmpty.setVisibility(View.GONE);
+            /* TextView textviewSpinnerEmpty = findViewById(R.id.textViewSpinnerEmpty);
+            textviewSpinnerEmpty.setVisibility(View.GONE); */
             spinner.setSelection(mAdapter.getPositionMarketSelected());
         } else {
             spinner.setVisibility(View.GONE);
+            Button buttonEditSpinner = findViewById(R.id.buttonEditSpinner);
+            buttonEditSpinner.setText(getString(R.string.spinner_edit_add_new_market));
+            buttonEditSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
         }
         setOnSpinnerItemSelectedListener();
     }
@@ -147,8 +153,11 @@ public class MainActivity extends AppCompatActivity {
                 spinnerMarketArray); //selected item will look like a spinner set from XML.
         spinnerArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); //each item in the spinner will look like this when you click the spinner (with radio buttons).
         spinner.setAdapter(spinnerArrayAdapter);
-        TextView textviewSpinnerEmpty = findViewById(R.id.textViewSpinnerEmpty);
-        textviewSpinnerEmpty.setVisibility(View.VISIBLE);
+        /*TextView textviewSpinnerEmpty = findViewById(R.id.textViewSpinnerEmpty);
+        textviewSpinnerEmpty.setVisibility(View.VISIBLE); */
+        Button buttonEditSpinner = findViewById(R.id.buttonEditSpinner);
+        buttonEditSpinner.setText(getString(R.string.spinner_edit_add_new_market));
+        buttonEditSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
         spinner.setVisibility(View.GONE);
     }
 
@@ -221,16 +230,21 @@ public class MainActivity extends AppCompatActivity {
         EditText editTextLocation = findViewById(R.id.editTextMarketLocation);
         String newMarketLocation = editTextLocation.getText().toString().trim();
 
+        if ((newMarketName.length() == 0) && (newMarketLocation.length() == 0)){
+            showUnacceptableInputDialog(EMPTY_TEXT);
+            return;
+        }
+
         if (GroceryAdapter.marketIsAlreadyInTable(mDatabase, newMarketName, newMarketLocation)) {
             closeKeyboard();
             // MAYBE INSTEAD OF SNACKBAR, MAKE A TEXTVIEW APPEAR SAYING IN RED, "MarketName (Location) already exists."
             Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_market_already_in_table, Snackbar.LENGTH_SHORT).show();
-        } else if ((newMarketName.length() > 0) && (newMarketLocation.length() > 0)){
+        } else {
 
             addMarketToTable(newMarketName, newMarketLocation);
 
-            TextView textViewSpinnerEmpty = findViewById(R.id.textViewSpinnerEmpty);
-            textViewSpinnerEmpty.setVisibility(View.GONE);
+            /*TextView textViewSpinnerEmpty = findViewById(R.id.textViewSpinnerEmpty);
+            textViewSpinnerEmpty.setVisibility(View.GONE); */
             spinner.setVisibility(View.VISIBLE);
 
             spinnerMarketArray = mAdapter.getMarketsList(mDatabase); //not efficient way of adding Market but this won't be done often.
@@ -299,6 +313,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (mIsSpinnerBeingEdited) {
             buttonEditSpinner.setText(getString(R.string.spinner_edit_back));
+            buttonEditSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
             textViewName.setVisibility(View.VISIBLE);
             editTextName.setVisibility(View.VISIBLE);
             textViewLocation.setVisibility(View.VISIBLE);
@@ -312,7 +327,6 @@ public class MainActivity extends AppCompatActivity {
             toggleEditAisle.setVisibility(View.GONE);
             toggleDelete.setVisibility(View.GONE);
             buttonDeleteAll.setVisibility(View.GONE);
-
 
         } else {
             textViewName.setVisibility(View.GONE);
@@ -331,17 +345,26 @@ public class MainActivity extends AppCompatActivity {
             buttonDeleteAll.setVisibility(View.VISIBLE);
 
             closeKeyboard();
-            buttonEditSpinner.setText(getString(R.string.spinner_edit));
+            if (spinnerMarketArray.size() == 0) {
+                buttonEditSpinner.setText(getString(R.string.spinner_edit_add_new_market));
+                buttonEditSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
+
+            } else {
+                buttonEditSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+                buttonEditSpinner.setText(getString(R.string.spinner_edit));
+            }
             editTextName.getText().clear();
             editTextLocation.getText().clear();
         }
     }
 
 
-    private void setCheckBoxListener() {
+    private void setRecyclerViewListeners() {
+        Log.d(TAG, "setRecyclerViewListeners: ");
         mAdapter.setOnItemClickListener(new GroceryAdapter.OnItemClickListener() {
             @Override
             public void onCheckBox(int position) {
+                Log.d(TAG, "onCheckBox:");
                 toggleInTrolley(position); //indirectly tick/untick the checkbox.
             }
         });
@@ -382,7 +405,6 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     //Log.d(TAG, "toggleDelete is NOT checked");
                     mSwipeable = false; // make list unswipeable
-                    //saveAisles(); <Wrong. This was for the toggleEditAisle, not toggleDeleteAisle
                 }
             }
         });
@@ -420,31 +442,60 @@ public class MainActivity extends AppCompatActivity {
             v = recyclerView.getChildAt(i); // v encapsulates a pair of aisle editText and product name EditText.
             EditText aisleEditText = v.findViewById(R.id.edittext_aisle_number);
             EditText productNameEditText = v.findViewById(R.id.edittext_product_name);
-            String aisleNumberStr = aisleEditText.getText().toString();
-            String productNameStr = productNameEditText.getText().toString();
-            //Log.d(TAG, "saveAisles: aisle found --> " + aisleNumberStr);
-            //Log.d(TAG, "saveAisles: product found --> " + productNameStr);
+            String aisleNumberStr = aisleEditText.getText().toString().trim();
+            String productNameStr = productNameEditText.getText().toString().trim();
+            Log.d(TAG, "saveAisles: aisle found --> " + aisleNumberStr);
+            Log.d(TAG, "saveAisles: product found --> " + productNameStr);
+            Log.d(TAG, "saveAisles:  the position of the item is: " + i);
             //Log.d(TAG, "saveAisles: selectedMarketGroceryColumnName: " + GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase));
-            updateAisle(aisleNumberStr, productNameStr);
+            if (aisleOrProductIsValid(aisleNumberStr, productNameStr)) {
+                updateAisle(aisleNumberStr, productNameStr);
+            } else {
+                break;
+            }
             //aisleEditText.setKeyListener(null); //makes the EditText non-editable so, it acts like a TextView.
         }
     }
 
 
-    private void updateAisle(String aisleNumberStr, String productNameStr) {
-        //Log.d(TAG, "updateAisle() called");
-        if (isDigitsOnly(aisleNumberStr) && (aisleNumberStr.length() > 0) && (productNameStr.length() > 0)) {
-            ContentValues cv = new ContentValues();
-            cv.put(GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase), Integer.parseInt(aisleNumberStr));
-
-            String[] mySelectionArgs = {productNameStr};
-            int numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
-                    cv,
-                    GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
-                    mySelectionArgs);
-            //Log.d(TAG, "updateAisle: number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
-            mAdapter.swapCursorGrocery(getAllItems());
+    private boolean aisleOrProductIsValid(String aisleNumberStr, String productNameStr) {
+        if (!aisleNumberStr.equals("?") && (aisleNumberStr.length() > 0) && (!isNumeric(aisleNumberStr))) {
+            showUnacceptableInputDialog(UNACCEPTABLE_AISLE);
+            return false;
+        } else if (productNameStr.length() == 0) {
+            showUnacceptableInputDialog(EMPTY_TEXT);
+            return false;
+        } else {
+            return true;
         }
+    }
+
+
+    private void updateAisle(String aisleNumberStr, String productNameStr) {
+        ContentValues cv = new ContentValues();
+        if (aisleNumberStr.equals("?")) {
+            cv.put(GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase), -1);
+        } else if (aisleNumberStr.length() == 0) {
+            cv.put(GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase), mAdapter.getAisleFromName(productNameStr));
+        } else {
+            cv.put(GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase), Integer.parseInt(aisleNumberStr));
+        }
+        String[] mySelectionArgs = {productNameStr};
+        int numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+                cv,
+                GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
+                mySelectionArgs);
+        //Log.d(TAG, "updateAisle: number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed
+        mAdapter.swapCursorGrocery(getAllItems());
+    }
+
+
+    private boolean isNumeric(String strNum) {
+        Pattern pattern = Pattern.compile("-?\\d+(\\.\\d+)?");
+        if (strNum == null) {
+            return false;
+        }
+        return pattern.matcher(strNum).matches();
     }
 
 
@@ -526,6 +577,7 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+
     public void closeKeyboard() {
         View view = findViewById(R.id.spinner);
         if (view != null) {
@@ -533,6 +585,31 @@ public class MainActivity extends AppCompatActivity {
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
+    }
+
+
+    private void showUnacceptableInputDialog(int flag) {
+        String title = "";
+        String message = "";
+        if (flag == UNACCEPTABLE_AISLE) {
+            title = "An aisle must be a number";
+            message = "You think you get to make up the rules, pal?";
+        } else if (flag == EMPTY_TEXT) {
+            title = "Empty text not accepted, sorry  :(";
+            message = "Write something... write SOMETHING!";
+        }
+        DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("ok", listener)
+                .create().show();
     }
 
     /*
@@ -558,7 +635,9 @@ public class MainActivity extends AppCompatActivity {
     /*
     Future implementations:
 
-    Note: when you try to add an item and there is no supermarket selected, it just automatically makes it market1AisleLocation
+    Note:
+    1) when you try to add an item and there is no supermarket selected, it just automatically makes it market1AisleLocation
+    2) remember that you decided that when you press the checkbox, it doesn't update the aisle, it just sets inTrolley to true/false.
 
     >> When you press "Edit Spinner", a window pops up (OR MAYBE WE START ANOTHER ACTIVITY??) that has a "negative" button/option of "change name", and
     a "positive" button/option of "add new". If you press change name, a picker pops up for you to select/find the
@@ -579,7 +658,10 @@ public class MainActivity extends AppCompatActivity {
     of cocoa powder and then 4 hours later updated the position of flour, if there are not updates in between to connect the two,
     the program will regard these as two separate sessions.
     Make an undo feature, google how to make undo using sqlite with/or in android studio.
+    >> Make a button "Clear". When you press the button, it reveals two options: "clear ticked items", and "clear all".
     >> Make background thread (see your java google docs for link)
+    >> If user goes to edit an item but just leaves it blank, reset everything to the way it was because for some reason I'm unable to
+    add a click listener to aisleEditText or itemNameEditText.
      */
 
 }

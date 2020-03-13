@@ -24,6 +24,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     private OnItemClickListener mListener;
     private int positionMarketSelected;
     private String mSelectedMarketColumnName;
+    //private ArrayList <Integer> aisleArrayBeforeEdit = null;
 
 
     public interface OnItemClickListener {
@@ -50,7 +51,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
 
-    public class GroceryViewHolder extends RecyclerView.ViewHolder {
+    public static class GroceryViewHolder extends RecyclerView.ViewHolder {
         public EditText nameText;
         public EditText aisleText;
         public CheckBox checkBox;
@@ -142,7 +143,6 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         return position;
     }
 
-
     public String getItemName(int position) {
         mCursorGrocery.moveToPosition(position); //first position is 0 (zero).
         String nameOfItemChecked = mCursorGrocery.getString(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
@@ -150,12 +150,39 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         return nameOfItemChecked;
     }
 
+
     public Integer getInTrolleyValue(int position) {
         mCursorGrocery.moveToPosition(position);
         Integer isInTrolley = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY));
         Log.d(TAG, "Inside getInTrolleyValue(), WAS product in trolley? " + isInTrolley);
         return isInTrolley;
     }
+
+
+    public Integer getAisleFromName(String productNameStr) {
+        boolean moveSucceeded = mCursorGrocery.moveToFirst();
+        while (moveSucceeded) {
+            String ithItemName = mCursorGrocery.getString(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
+            if (ithItemName.equals(productNameStr)) {
+                return mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(mSelectedMarketColumnName));
+            }
+            moveSucceeded = mCursorGrocery.moveToNext();
+        }
+        return -1; //This code should not be reached.
+    }
+
+//    public void temporarilyStoreAisles() {
+//        boolean moveSucceeded = mCursorGrocery.moveToFirst();
+//        while (moveSucceeded) {
+//            Integer aisle = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(mSelectedMarketColumnName));
+//            this.aisleArrayBeforeEdit.add(aisle);
+//            moveSucceeded = mCursorGrocery.moveToNext();
+//        }
+//    }
+//
+//    public void setAisleArrayBeforeEditToNull() {
+//        this.aisleArrayBeforeEdit = null;
+//    }
 
 
     public List<Market> getMarketsList(SQLiteDatabase database) {
@@ -192,10 +219,12 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         return positionMarketSelected;
     }
 
+
     public void setmSelectedMarketColumnName(String selectedMarketColumnName) {
         Log.d(TAG, "setmSelectedMarketColumnName:  new value of mSelectedMarketColumnName is " + this.mSelectedMarketColumnName);
         this.mSelectedMarketColumnName = selectedMarketColumnName;
     }
+
 
     static public String getSelectedMarketGroceryListColumnName(SQLiteDatabase database) {
         Integer SQL_TRUE = 1;
@@ -225,6 +254,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         return selectedMarketGroceryListColumnName;
     }
 
+
     static public boolean marketTableIsNotEmpty(SQLiteDatabase database) {
         Cursor cursorMarkets = database.query(
                 GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET,
@@ -239,6 +269,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         cursorMarkets.close();
         return moveSucceeded;
     }
+
 
     static public boolean marketIsAlreadyInTable(SQLiteDatabase database, String newMarketName, String newMarketLocation) {
         String[] selectionArgs = {newMarketName, newMarketLocation};
@@ -255,6 +286,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         boolean moveSucceeded = cursorMarkets.moveToFirst();
         return moveSucceeded;
     }
+
 
     static public int getNewestGroceryListColumnNumber(SQLiteDatabase database) {
         Cursor cursorMarkets = database.query(

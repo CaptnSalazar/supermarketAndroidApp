@@ -26,7 +26,7 @@
         android:layout_weight="0.4"
         android:ems="10"
         android:hint="@string/aisle_default"
-        android:inputType="number"
+        android:inputType="textVisiblePassword"
         android:importantForAutofill="no" />
 
     <EditText
@@ -37,7 +37,7 @@
         android:ems="10"
         android:hint="@string/product_name"
         android:importantForAutofill="no"
-        android:inputType="textPersonName" />
+        android:inputType="text" />
 
     <CheckBox
         android:id="@+id/checkBox"
