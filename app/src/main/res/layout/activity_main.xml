@@ -38,7 +38,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:onClick="onAddItem"
-        android:text="@string/add_new_item" />
+        android:text="@string/button_add_new_item" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerview"
@@ -50,11 +50,11 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginStart="7dp"
+        android:layout_marginLeft="7dp"
+        android:layout_marginTop="3dp"
+        android:layout_marginEnd="7dp"
+        android:layout_marginRight="7dp"
         android:layout_marginBottom="8dp" />
 
     <Button
@@ -68,18 +68,19 @@
         android:layout_marginEnd="30dp"
         android:layout_marginRight="30dp"
         android:onClick="onDeleteAllRows"
-        android:text="Delete All" />
+        android:text="Delete All"
+        android:visibility="gone" />
 
     <ToggleButton
         android:id="@+id/toggleButtonEditSave"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/editTextNewItem"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
         android:textOff="@string/toggle_edit_list"
         android:textOn="@string/toggle_save_list" />
 
@@ -88,11 +89,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/editTextNewItem"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
-        android:layout_toEndOf="@+id/toggleButtonEditSave"
-        android:layout_toRightOf="@+id/toggleButtonEditSave"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_toStartOf="@+id/toggleButtonEditSave"
+        android:layout_toLeftOf="@+id/toggleButtonEditSave"
         android:textOff="@string/toggle_delete_item"
         android:textOn="@string/toggle_done_deleting_item" />
 
@@ -221,6 +222,38 @@
         android:layout_marginRight="104dp"
         android:onClick="onConfirm"
         android:text="@string/confirm"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/textViewItemInTrolley"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/buttonAddItem"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="8dp"
+        android:gravity="right"
+        android:text="x/y"
+        android:textSize="25sp" />
+
+    <Button
+        android:id="@+id/buttonClearList"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editTextNewItem"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginRight="0dp"
+        android:layout_toStartOf="@+id/toggleButtonDeleteItem"
+        android:layout_toLeftOf="@+id/toggleButtonDeleteItem"
+        android:layout_toEndOf="@+id/textViewItemInTrolley"
+        android:layout_toRightOf="@+id/textViewItemInTrolley"
+        android:text="@string/button_clear_ticked_then_unticked"
+        android:onClick="onClear"
         android:visibility="gone" />
 
 </RelativeLayout>

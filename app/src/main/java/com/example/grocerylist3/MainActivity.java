@@ -436,14 +436,30 @@ public class MainActivity extends AppCompatActivity {
                     toggleDelete.setTextColor(Color.DKGRAY);
                     toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
                     mSwipeable = true; // make list swipeable
+                    Button buttonClear = findViewById(R.id.buttonClearList);
+                    buttonClear.setVisibility(View.VISIBLE);
                 } else {
                     //Log.d(TAG, "toggleDelete is NOT checked");
                     toggleDelete.setTextColor(Color.BLACK);
                     toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
                     mSwipeable = false; // make list unswipeable
+                    Button buttonClear = findViewById(R.id.buttonClearList);
+                    buttonClear.setVisibility(View.GONE);
                 }
             }
         });
+    }
+
+    public void onClear(View view) {
+        int numberOfItemsInList = mAdapter.getItemCount();
+        int numberOfItemsTicked = mAdapter.getTickedCount();
+        if (numberOfItemsInList == numberOfItemsTicked) {
+            //remove all items from list and make
+        } else if (numberOfItemsInList > numberOfItemsTicked) {
+            //remove all ticked items from list
+        } else {
+            //something went wrong
+        }
     }
 
 
@@ -712,21 +728,23 @@ public class MainActivity extends AppCompatActivity {
     */
 
     /*
+    Done implementations:
+    >> Make the program only accept reasonable values for the item names and aisle numbers and supermarket names.
+    >> Make the toggle button that needs to be pressed flash between blue and red for a few seconds (i.e. change its color to blue and wait a few seconds then change to red).
+
     Future implementations:
 
     Note:
     1) when you try to add an item and there is no supermarket selected, it just automatically makes it market1AisleLocation
     2) remember that you decided that when you press the checkbox, it doesn't update the aisle, it just sets inTrolley to true/false.
     3) remember that the onCreate method is called every time for some reason, so your assumption that it will be called may cause problems in the actual phone.
+
     >> When you press "Edit Spinner", a window pops up that has options to "Cancel", "Add", "Delete" and "View Deleted"
-    >> Make the program only accept reasonable values for the item names and aisle numbers and supermarket names.
-    >> Make it so that when you are in edit mode, and an aisle editText loses focus you check if it was changed.
+    >> A textView above the ticked column in the list that displays the x/y, where x is number of ticked items and y is number of items in trolley. This value of this textview is
+    initiated in onCreate and updated whenever an item is added or removed.
+    >> When you press "Delete Item(s)", the "clear" button appears and it clears all ticked items or (if there are none) it clears all unticked items.
     >> Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
     >> Autocompletion based on the items that already exist in database.
-    >> Make the toggle button that needs to be pressed flash between blue and red for a few seconds (i.e. change its color to blue and wait a few seconds then change to red).
-    >> when the user adds an item to the list that has very similar spelling to another,
-    make a window pop-up, saying that there already exists a record of [this other item]. Are they they the same?
-    Which spelling is right?
     >> Make a feature that allows the user to change the supermarket they updated, in case they made a mistake and updated
     the wrong supermarket. Be like, in your last session, you updated THIS supermarket, but which supermarket did MEAN to update?
     Maybe keep track of updates by date or how distant (time-wise) the last update to a table was, e.g. if you updated the location
@@ -735,6 +753,7 @@ public class MainActivity extends AppCompatActivity {
     Make an undo feature, google how to make undo using sqlite with/or in android studio.
     >> Make a button "Clear". When you press the button, it reveals two options: "clear ticked items", and "clear all".
     >> Make background thread (see your java google docs for link)
+    >> Order the list by whether the item is inTrolley/ticked as well as aisle number and alphabetically.
     >> If user goes to edit an item but just leaves it blank, reset everything to the way it was because for some reason I'm unable to
     add a click listener to aisleEditText or itemNameEditText.
      */

@@ -2,11 +2,11 @@
     <string name="app_name">GroceryList3</string>
     <string name="aisle_default">\?</string>
     <string name="product_name">Product name</string>
-    <string name="add_new_item">Add</string>
-    <string name="button_edit_list">Edit List</string>
+    <string name="button_add_new_item">Add</string>
+    <string name="button_clear_ticked_then_unticked">Clear</string>
     <string name="toggle_edit_list">Edit Aisles</string>
     <string name="toggle_save_list">Save Aisles</string>
-    <string name="toggle_delete_item">Delete Item(s)</string>
+    <string name="toggle_delete_item">Delete Item</string>
     <string name="toggle_done_deleting_item">Done Deleting</string>
 <!--    <string name="snack_message_press_delete_items">Press DELETE ITEM(S) to allow swipe delete</string>-->
     <string name="snack_message_add_a_supermarket">Add a supermarket before you can save aisles</string>

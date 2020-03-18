@@ -3,6 +3,7 @@ package com.example.grocerylist3;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -136,6 +137,14 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         } else {
             holder.aisleText.setText(String.valueOf(aisle));
         }
+
+        if (holder.checkBox.isChecked()) {
+            holder.nameText.setTextColor(Color.GRAY);
+            holder.aisleText.setTextColor(Color.LTGRAY);
+        } else {
+            holder.nameText.setTextColor(Color.BLACK);
+            holder.aisleText.setTextColor(Color.DKGRAY);
+        }
     }
 
 
@@ -143,6 +152,19 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     public int getItemCount() {
         //This returns the total number of rows, not the number of rows currently in the list.
         return mCursorGrocery.getCount();
+    }
+
+    public int getTickedCount() {
+        int numberOfTickedItems = 0;
+        boolean moveSucceeded = mCursorGrocery.moveToFirst();
+        while (moveSucceeded) {
+            Integer isInTrolley = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY));
+            if (integerToBoolean(isInTrolley)) {
+                numberOfTickedItems++;
+            }
+            moveSucceeded = mCursorGrocery.moveToNext();
+        }
+        return numberOfTickedItems;
     }
 
     //public int getMarketCount() { return mCursorMarket.getCount(); }
