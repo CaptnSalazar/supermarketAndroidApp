@@ -739,7 +739,10 @@ public class MainActivity extends AppCompatActivity {
     2) remember that you decided that when you press the checkbox, it doesn't update the aisle, it just sets inTrolley to true/false.
     3) remember that the onCreate method is called every time for some reason, so your assumption that it will be called may cause problems in the actual phone.
 
-    >> When you press "Edit Spinner", a window pops up that has options to "Cancel", "Add", "Delete" and "View Deleted"
+    >> When you press "Edit Spinner", a window pops up that has options: 1) "Add", which if pressed, uses the text in the market name and location editTexts to add a new supermarket
+    to the spinner; 2) "Delete", which if pressed, also uses the text in the market name and location editTexts and asks the user, "are you sure you wanna delete [insert name and
+    location]? to delete the given market from the spinner; 3) "Recover", which if pressed, looks at the supermarket table and displays in a recyclerview, all the supermarkets
+    that were removed from the spinner, and when you tap a supermarket is asks, "do you wanna recover [insert name and location]?"
     >> A textView above the ticked column in the list that displays the x/y, where x is number of ticked items and y is number of items in trolley. This value of this textview is
     initiated in onCreate and updated whenever an item is added or removed.
     >> When you press "Delete Item(s)", the "clear" button appears and it clears all ticked items or (if there are none) it clears all unticked items.
