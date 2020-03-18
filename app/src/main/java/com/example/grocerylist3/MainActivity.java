@@ -11,11 +11,13 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.ColorStateList;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -47,9 +49,11 @@ public class MainActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
     boolean mSwipeable;
+
     private EditText editTextNewItemName;
     private ToggleButton toggleEditAisle;
     private ToggleButton toggleDelete;
+    private Handler mHandler = new Handler();
 
     Spinner spinner;
     List<Market> spinnerMarketArray; //I think THIS DOESN'T HAVE TO BE GLOBAL.
@@ -61,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private int EMPTY_TEXT = 2;
 
 
-    //@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         //Log.d(TAG, "onCreate() called");
@@ -89,10 +93,13 @@ public class MainActivity extends AppCompatActivity {
         setRecyclerViewListeners();
 
         toggleDelete = findViewById(R.id.toggleButtonDeleteItem);
+        toggleDelete.setTextColor(Color.BLACK);
+        toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
         setToggleDeleteListener();
 
         toggleEditAisle = findViewById(R.id.toggleButtonEditSave);
-        toggleEditAisle.setTextColor(Color.GREEN);
+        toggleEditAisle.setTextColor(Color.BLACK);
+        toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
         //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("green")));
         setToggleEditAisleListener();
 
@@ -164,8 +171,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void onAddItem(View view) {
         if (toggleEditAisle.isChecked()) {
-            //memo: also make "Edit List" button glow
+            mHandler.postDelayed(mFlashRunnable, 700);
+            mHandler.postDelayed(mFlashRunnable, 1400);
             Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
+        } else if (toggleDelete.isChecked()) {
+            mHandler.postDelayed(mFlashRunnable, 700);
+            mHandler.postDelayed(mFlashRunnable, 1400);
+            Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
         } else {
             addItem();
         }
@@ -177,15 +189,16 @@ public class MainActivity extends AppCompatActivity {
          * Then, try to update the grocery items table with that phrase/item name, and if you couldn't
          * update it, it means the item isn't on it, so insert the new item. Then scroll to the position
          * of the item - including if the item was already on the recyclerview list. */
+        //Log.d(TAG, "addItem() called");
+        //Log.d(TAG, "inside addItem and toggleEditAisle value is " + toggleEditAisle.isChecked());
+        //Log.d(TAG, "inside addItem and toggleDelete value is " + toggleDelete.isChecked());
+        String name = editTextNewItemName.getText().toString().trim();
+        editTextNewItemName.getText().clear();
 
-//        //Log.d(TAG, "addItem() called");
-//        //Log.d(TAG, "inside addItem and toggleEditAisle value is " + toggleEditAisle.isChecked());
-//        //Log.d(TAG, "inside addItem and toggleDelete value is " + toggleDelete.isChecked());
-        if (editTextNewItemName.getText().toString().trim ().length() == 0) {
+        if (name.length() == 0) {
             return;
         }
 
-        String name = editTextNewItemName.getText().toString();
         String nameCapitalised = name.substring(0, 1).toUpperCase() + name.substring(1);
 
         ContentValues cv = new ContentValues();
@@ -203,7 +216,6 @@ public class MainActivity extends AppCompatActivity {
         }
         mAdapter.swapCursorGrocery(getAllItems());
 
-        editTextNewItemName.getText().clear();
         recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised));
     }
 
@@ -212,7 +224,17 @@ public class MainActivity extends AppCompatActivity {
         //Log.d(TAG, "onEditSpinner: ");
         /*Intent intent = new Intent(this, EditSuperMarketsInfo.class);
         startActivity(intent);*/
-        setLayoutEditSpinner();
+        if (toggleDelete.isChecked()) {
+            mHandler.postDelayed(mFlashRunnable, 700);
+            mHandler.postDelayed(mFlashRunnable, 1400);
+            Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
+        } else if (toggleEditAisle.isChecked()) {
+            mHandler.postDelayed(mFlashRunnable, 700);
+            mHandler.postDelayed(mFlashRunnable, 1400);
+            Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
+        } else {
+            setLayoutEditSpinner();
+        }
     }
 
 
@@ -361,12 +383,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void setRecyclerViewListeners() {
         Log.d(TAG, "setRecyclerViewListeners: ");
-        mAdapter.setOnItemClickListener(new GroceryAdapter.OnItemClickListener() {
+        mAdapter.setOnItemListener(new GroceryAdapter.OnItemListener() {
             @Override
             public void onCheckBox(int position) {
                 Log.d(TAG, "onCheckBox:");
                 toggleInTrolley(position); //indirectly tick/untick the checkbox.
             }
+            /* @Override
+            public void onTextViewProductName(int position, boolean hasFocus) {
+                Log.d(TAG, "onTextViewProductName: Position of textView whose focus changed: " + position + ". Has focus? " + hasFocus);
+            } */
         });
     }
 
@@ -398,12 +424,22 @@ public class MainActivity extends AppCompatActivity {
 
     private void setToggleDeleteListener() {
         toggleDelete.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
+                if (isChecked && toggleEditAisle.isChecked()) { //only one toggle should checked at a time
+                    toggleDelete.setChecked(false);
+                    mHandler.postDelayed(mFlashRunnable, 600);
+                    mHandler.postDelayed(mFlashRunnable, 1200);
+                    Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
+                } else if (isChecked) {
                     //Log.d(TAG, "toggleDelete is checked");
+                    toggleDelete.setTextColor(Color.DKGRAY);
+                    toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
                     mSwipeable = true; // make list swipeable
                 } else {
                     //Log.d(TAG, "toggleDelete is NOT checked");
+                    toggleDelete.setTextColor(Color.BLACK);
+                    toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
                     mSwipeable = false; // make list unswipeable
                 }
             }
@@ -415,13 +451,20 @@ public class MainActivity extends AppCompatActivity {
         toggleEditAisle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (isChecked) {
+                if (isChecked && toggleDelete.isChecked()) { //only one toggle should checked at a time
+                    toggleEditAisle.setChecked(false);
+                    mHandler.postDelayed(mFlashRunnable, 600);
+                    mHandler.postDelayed(mFlashRunnable, 1200);
+                    Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
+                } else if (isChecked) {
                     //Log.d(TAG, "toggleEditAisle is checked");
-                    toggleEditAisle.setTextColor(Color.RED);
+                    toggleEditAisle.setTextColor(Color.DKGRAY);
+                    toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
                     //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("red")));
                 } else {
                     //Log.d(TAG, "toggleEditAisle is NOT checked");
-                    toggleEditAisle.setTextColor(Color.GREEN);
+                    toggleEditAisle.setTextColor(Color.BLACK);
+                    toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
                     //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("green")));
                     if (GroceryAdapter.marketTableIsNotEmpty(mDatabase)) {
                         saveAisles();
@@ -434,16 +477,52 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private Runnable mFlashRunnable = new Runnable() {
+        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+        @Override
+        public void run() {
+            flash();
+        }
+    };
+
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void flash() {
+        if (toggleEditAisle.isChecked() && (!toggleDelete.isChecked())) {
+            int color = toggleEditAisle.getCurrentTextColor();
+            if (color == Color.BLACK) {
+                toggleEditAisle.setTextColor(Color.DKGRAY);
+                toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
+            } else {
+                toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
+                toggleEditAisle.setTextColor(Color.BLACK);
+            }
+        } else if (toggleDelete.isChecked() && (!toggleEditAisle.isChecked())) {
+            int color = toggleDelete.getCurrentTextColor();
+            if (color == Color.BLACK) {
+                toggleDelete.setTextColor(Color.DKGRAY);
+                toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
+            } else {
+                toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
+                toggleDelete.setTextColor(Color.BLACK);
+            }
+        } else {
+            Log.d(TAG, "flash: ERROR - somehow, both toggles where checked at the time this fxn was called :(");
+        }
+
+    }
+
+
     private void saveAisles() {
         //Log.d(TAG, "saveAisles() called");
         View v; // v will be each item (i.e. one set of aisleNumber, productName, checkBox views) in recyclerview.
         for (int i = 0; i < recyclerView.getChildCount(); i++) {
             //Log.d(TAG, "saveAisles: we are at the " + String.valueOf(i) + "th value of the recyclerview ------");
             v = recyclerView.getChildAt(i); // v encapsulates a pair of aisle editText and product name EditText.
-            EditText aisleEditText = v.findViewById(R.id.edittext_aisle_number);
-            EditText productNameEditText = v.findViewById(R.id.edittext_product_name);
+            EditText aisleEditText = v.findViewById(R.id.editTextAisleNumber);
+            TextView productNameTextView = v.findViewById(R.id.textViewProductName);
             String aisleNumberStr = aisleEditText.getText().toString().trim();
-            String productNameStr = productNameEditText.getText().toString().trim();
+            String productNameStr = productNameTextView.getText().toString().trim();
             Log.d(TAG, "saveAisles: aisle found --> " + aisleNumberStr);
             Log.d(TAG, "saveAisles: product found --> " + productNameStr);
             Log.d(TAG, "saveAisles:  the position of the item is: " + i);
@@ -511,11 +590,11 @@ public class MainActivity extends AppCompatActivity {
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 if (toggleDelete.isChecked()) {
                     removeItem((long) viewHolder.itemView.getTag());
-                } else {
-                    Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_delete_items, Snackbar.LENGTH_SHORT).show();
-                    //mAdapter.swapCursorGrocery(getAllItems()); //before I figured out proper way (i.e. disabling swipe altogether).
                 }
-
+                /* else {
+                    Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_delete_items, Snackbar.LENGTH_SHORT).show();
+                    mAdapter.swapCursorGrocery(getAllItems()); //before I figured out proper way (i.e. disabling swipe altogether).
+                } */
             }
 
             @Override
@@ -592,8 +671,8 @@ public class MainActivity extends AppCompatActivity {
         String title = "";
         String message = "";
         if (flag == UNACCEPTABLE_AISLE) {
-            title = "An aisle must be a number";
-            message = "You think you get to make up the rules, pal?";
+            title = "Aisle must be either: NUMBER, EMPTY, or '?'";
+            message = "EMPTY: sets aisle to what it was previously.\n'?' sets the aisle to unknown, like it was originally.";
         } else if (flag == EMPTY_TEXT) {
             title = "Empty text not accepted, sorry  :(";
             message = "Write something... write SOMETHING!";
@@ -638,17 +717,13 @@ public class MainActivity extends AppCompatActivity {
     Note:
     1) when you try to add an item and there is no supermarket selected, it just automatically makes it market1AisleLocation
     2) remember that you decided that when you press the checkbox, it doesn't update the aisle, it just sets inTrolley to true/false.
-
-    >> When you press "Edit Spinner", a window pops up (OR MAYBE WE START ANOTHER ACTIVITY??) that has a "negative" button/option of "change name", and
-    a "positive" button/option of "add new". If you press change name, a picker pops up for you to select/find the
-    market name you wanna change and 2 editTexts one above the other appear with text to their left saying
-    "Location" with editText hint "e.g. Ilam Road", and "Company" with editText hint "e.g. Countdown", and
-    two buttons/options, "cancel" and "confirm".
+    3) remember that the onCreate method is called every time for some reason, so your assumption that it will be called may cause problems in the actual phone.
+    >> When you press "Edit Spinner", a window pops up that has options to "Cancel", "Add", "Delete" and "View Deleted"
     >> Make the program only accept reasonable values for the item names and aisle numbers and supermarket names.
     >> Make it so that when you are in edit mode, and an aisle editText loses focus you check if it was changed.
     >> Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
     >> Autocompletion based on the items that already exist in database.
-    >> Make the Edit List button glow or point to it, when someone tries to do other things while in Edit mode.
+    >> Make the toggle button that needs to be pressed flash between blue and red for a few seconds (i.e. change its color to blue and wait a few seconds then change to red).
     >> when the user adds an item to the list that has very similar spelling to another,
     make a window pop-up, saying that there already exists a record of [this other item]. Are they they the same?
     Which spelling is right?

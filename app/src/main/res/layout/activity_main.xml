@@ -94,7 +94,7 @@
         android:layout_toEndOf="@+id/toggleButtonEditSave"
         android:layout_toRightOf="@+id/toggleButtonEditSave"
         android:textOff="@string/toggle_delete_item"
-        android:textOn="@string/toggle_delete_item" />
+        android:textOn="@string/toggle_done_deleting_item" />
 
     <Spinner
         android:id="@+id/spinner"

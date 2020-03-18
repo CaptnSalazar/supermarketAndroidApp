@@ -7,11 +7,13 @@
     <string name="toggle_edit_list">Edit Aisles</string>
     <string name="toggle_save_list">Save Aisles</string>
     <string name="toggle_delete_item">Delete Item(s)</string>
-    <string name="snack_message_press_delete_items">Press DELETE ITEM(S) to allow swipe delete</string>
+    <string name="toggle_done_deleting_item">Done Deleting</string>
+<!--    <string name="snack_message_press_delete_items">Press DELETE ITEM(S) to allow swipe delete</string>-->
     <string name="snack_message_add_a_supermarket">Add a supermarket before you can save aisles</string>
     <string name="snack_message_market_already_in_table">That supermarket is already in the table</string>
     <string name="snack_message_swipe_to_delete">Swipe/drag item left or right to delete</string>
     <string name="snack_message_press_save_changes">Press \"Save Changes\" before doing other things.</string>
+    <string name="snack_message_press_done_deleting">Press \"Done Deleting\" before doing other things.</string>
     <string name="supermarket_example">e.g. Countdown</string>
     <string name="location_example">e.g. Northlands</string>
     <string name="supermarket_location_example">e.g. Northlands</string>

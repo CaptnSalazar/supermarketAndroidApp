@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,13 +22,13 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     private Context mContext;
     private Cursor mCursorGrocery;
     //private Cursor mCursorMarket;
-    private OnItemClickListener mListener;
+    private OnItemListener mListener;
     private int positionMarketSelected;
     private String mSelectedMarketColumnName;
     //private ArrayList <Integer> aisleArrayBeforeEdit = null;
 
 
-    public interface OnItemClickListener {
+    public interface OnItemListener {
         /*An interface is a completely "abstract class" that is used to group related methods with empty bodies.
          * To access the interface methods, the interface must be "implemented" (kinda like inherited) by another
          *  class with the implements keyword (instead of extends). The body of the interface method is provided
@@ -35,9 +36,10 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
 
         //void onItemClick(int position);
         void onCheckBox(int position);
+        //void onTextViewProductName(int position, boolean hasFocus);
     }
 
-    public void setOnItemClickListener(OnItemClickListener listener) {
+    public void setOnItemListener(OnItemListener listener) {
         mListener = listener;
     }
 
@@ -52,15 +54,15 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
 
 
     public static class GroceryViewHolder extends RecyclerView.ViewHolder {
-        public EditText nameText;
+        public TextView nameText;
         public EditText aisleText;
         public CheckBox checkBox;
 
-        public GroceryViewHolder(@NonNull View itemView, final OnItemClickListener listener) {
+        public GroceryViewHolder(@NonNull View itemView, final OnItemListener listener) {
             super(itemView);
 
-            nameText = itemView.findViewById(R.id.edittext_product_name);
-            aisleText = itemView.findViewById(R.id.edittext_aisle_number);
+            nameText = itemView.findViewById(R.id.textViewProductName);
+            aisleText = itemView.findViewById(R.id.editTextAisleNumber);
             checkBox = itemView.findViewById(R.id.checkBox);
 
             checkBox.setOnClickListener(new View.OnClickListener() {
@@ -74,6 +76,30 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
                     }
                 }
             });
+
+            /* aisleText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    if (listener != null) {
+                        int position = getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION) {
+                            listener.onTextViewProductName(position, hasFocus);
+                        }
+                    }
+                }
+            });  */
+
+            /* nameText.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (listener != null) {
+                        int position = getAdapterPosition();
+                        if (position != RecyclerView.NO_POSITION) {
+                            listener.onTextViewProductName(position);
+                        }
+                    }
+                }
+            });  */
         }
     }
 

@@ -20,24 +20,25 @@
 <!--        android:textSize="30sp"/>-->
 
     <EditText
-        android:id="@+id/edittext_aisle_number"
+        android:id="@+id/editTextAisleNumber"
         android:layout_width="10dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_weight="0.4"
         android:ems="10"
+        android:gravity="center"
         android:hint="@string/aisle_default"
-        android:inputType="textVisiblePassword"
-        android:importantForAutofill="no" />
+        android:importantForAutofill="no"
+        android:inputType="textVisiblePassword" />
 
-    <EditText
-        android:id="@+id/edittext_product_name"
-        android:layout_width="wrap_content"
+    <TextView
+        android:id="@+id/textViewProductName"
+        android:layout_width="200dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:ems="10"
         android:hint="@string/product_name"
         android:importantForAutofill="no"
-        android:inputType="text" />
+        android:textSize="24sp" />
 
     <CheckBox
         android:id="@+id/checkBox"

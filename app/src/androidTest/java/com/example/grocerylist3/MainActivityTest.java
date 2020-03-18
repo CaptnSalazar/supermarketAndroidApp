@@ -6,7 +6,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 
-import androidx.test.espresso.DataInteraction;
 import androidx.test.espresso.ViewInteraction;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -174,7 +173,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
 //                        isDisplayed()));
 //        editText.check(matches(withText("Jui")));
         ViewInteraction editTextFirstItem = onView(
-                Matchers.allOf(withId(R.id.edittext_product_name), withText(DatabaseTestHelper.firstItem),
+                Matchers.allOf(withId(R.id.textViewProductName), withText(DatabaseTestHelper.firstItem),
                         childAtPosition(
                                 childAtPosition(
                                         withId(R.id.recyclerview),
@@ -184,7 +183,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         editTextFirstItem.check(matches(withText(DatabaseTestHelper.firstItem)));
 
         ViewInteraction editTextSecondItem = onView(
-                Matchers.allOf(withId(R.id.edittext_product_name), withText(DatabaseTestHelper.secondItem),
+                Matchers.allOf(withId(R.id.textViewProductName), withText(DatabaseTestHelper.secondItem),
                         childAtPosition(
                                 childAtPosition(
                                         withId(R.id.recyclerview),
@@ -196,7 +195,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         //I think trying to get the third item doesn't work because the app has the softkeyboard open.
         closeKeyboardByAddingPreExistingItemThatYouWannaCheck(DatabaseTestHelper.thirdItem);
         ViewInteraction editTextThirdItem = onView(
-                Matchers.allOf(withId(R.id.edittext_product_name), withText(DatabaseTestHelper.thirdItem),
+                Matchers.allOf(withId(R.id.textViewProductName), withText(DatabaseTestHelper.thirdItem),
                         childAtPosition(
                                 childAtPosition(
                                         withId(R.id.recyclerview),
