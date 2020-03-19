@@ -225,7 +225,7 @@
         android:visibility="gone" />
 
     <TextView
-        android:id="@+id/textViewItemInTrolley"
+        android:id="@+id/textViewNumOfItemsInTrolley"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/buttonAddItem"
@@ -250,8 +250,8 @@
         android:layout_marginRight="0dp"
         android:layout_toStartOf="@+id/toggleButtonDeleteItem"
         android:layout_toLeftOf="@+id/toggleButtonDeleteItem"
-        android:layout_toEndOf="@+id/textViewItemInTrolley"
-        android:layout_toRightOf="@+id/textViewItemInTrolley"
+        android:layout_toEndOf="@+id/textViewNumOfItemsInTrolley"
+        android:layout_toRightOf="@+id/textViewNumOfItemsInTrolley"
         android:text="@string/button_clear_ticked_then_unticked"
         android:onClick="onClear"
         android:visibility="gone" />

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +28,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     private int positionMarketSelected;
     private String mSelectedMarketColumnName;
     //private ArrayList <Integer> aisleArrayBeforeEdit = null;
+    private boolean isToggleEditAisleChecked = false;
 
 
     public interface OnItemListener {
@@ -137,14 +139,20 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         } else {
             holder.aisleText.setText(String.valueOf(aisle));
         }
-
         if (holder.checkBox.isChecked()) {
             holder.nameText.setTextColor(Color.GRAY);
             holder.aisleText.setTextColor(Color.LTGRAY);
         } else {
             holder.nameText.setTextColor(Color.BLACK);
-            holder.aisleText.setTextColor(Color.DKGRAY);
+            if (isToggleEditAisleChecked) {
+                holder.aisleText.setTextColor(Color.RED);
+                holder.aisleText.setTypeface(null, Typeface.BOLD);
+            } else {
+                holder.aisleText.setTextColor(Color.DKGRAY);
+                holder.aisleText.setTypeface(null, Typeface.NORMAL);
+            }
         }
+
     }
 
 
@@ -167,7 +175,10 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         return numberOfTickedItems;
     }
 
-    //public int getMarketCount() { return mCursorMarket.getCount(); }
+    public void alternateIsToggleEditAisleCheckedValue() {
+        isToggleEditAisleChecked = !isToggleEditAisleChecked;
+        notifyDataSetChanged();
+    }
 
 
     private boolean integerToBoolean(Integer number) {

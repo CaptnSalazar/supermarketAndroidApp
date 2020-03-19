@@ -51,9 +51,10 @@ public class MainActivity extends AppCompatActivity {
     boolean mSwipeable;
 
     private EditText editTextNewItemName;
+    private TextView textViewNumOfItemsTicked;
     private ToggleButton toggleEditAisle;
     private ToggleButton toggleDelete;
-    private Handler mHandler = new Handler();
+    private Handler mHandlerToggleFlash = new Handler();
 
     Spinner spinner;
     List<Market> spinnerMarketArray; //I think THIS DOESN'T HAVE TO BE GLOBAL.
@@ -82,14 +83,6 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(mAdapter);
         mSwipeable = false;
 
-        /*Intent intent = getIntent();
-        String messageNewMarket = intent.getStringExtra(EditSuperMarketsInfo.EXTRA_MESSAGE_MARKET_INFO);
-        //If we didn't check this, then the app would crash when it started.
-        if (messageNewMarket != null) {
-            //Log.d(TAG, "onCreate: the new market is: " + messageNewMarket);
-            addMarket(messageNewMarket);
-        }*/
-
         setRecyclerViewListeners();
 
         toggleDelete = findViewById(R.id.toggleButtonDeleteItem);
@@ -104,6 +97,8 @@ public class MainActivity extends AppCompatActivity {
         setToggleEditAisleListener();
 
         editTextNewItemName = findViewById(R.id.editTextNewItem);
+        textViewNumOfItemsTicked = findViewById(R.id.textViewNumOfItemsInTrolley);
+        textViewNumOfItemsTicked.setText(mAdapter.getTickedCount() + "/" + mAdapter.getItemCount());
 
         setRecyclerViewSwipeListener();
 
@@ -151,6 +146,7 @@ public class MainActivity extends AppCompatActivity {
         mDatabase.execSQL("DELETE FROM " + GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET);
 
         mAdapter.swapCursorGrocery(getAllItems());
+        textViewNumOfItemsTicked.setText(mAdapter.getTickedCount() + "/" + mAdapter.getItemCount());
         //mAdapter.swapCursorMarket(getAllSupermarkets());
 
         spinnerMarketArray = new ArrayList<Market>();
@@ -171,12 +167,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void onAddItem(View view) {
         if (toggleEditAisle.isChecked()) {
-            mHandler.postDelayed(mFlashRunnable, 700);
-            mHandler.postDelayed(mFlashRunnable, 1400);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
             Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
         } else if (toggleDelete.isChecked()) {
-            mHandler.postDelayed(mFlashRunnable, 700);
-            mHandler.postDelayed(mFlashRunnable, 1400);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
             Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
         } else {
             addItem();
@@ -215,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
             mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
         }
         mAdapter.swapCursorGrocery(getAllItems());
-
+        textViewNumOfItemsTicked.setText(mAdapter.getTickedCount() + "/" + mAdapter.getItemCount());
         recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised));
     }
 
@@ -225,12 +221,12 @@ public class MainActivity extends AppCompatActivity {
         /*Intent intent = new Intent(this, EditSuperMarketsInfo.class);
         startActivity(intent);*/
         if (toggleDelete.isChecked()) {
-            mHandler.postDelayed(mFlashRunnable, 700);
-            mHandler.postDelayed(mFlashRunnable, 1400);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
             Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
         } else if (toggleEditAisle.isChecked()) {
-            mHandler.postDelayed(mFlashRunnable, 700);
-            mHandler.postDelayed(mFlashRunnable, 1400);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
             Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
         } else {
             setLayoutEditSpinner();
@@ -418,6 +414,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         mAdapter.swapCursorGrocery(getAllItems());
+        textViewNumOfItemsTicked.setText(mAdapter.getTickedCount() + "/" + mAdapter.getItemCount());
         //recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised)); //maybe call this?
     }
 
@@ -428,8 +425,8 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked && toggleEditAisle.isChecked()) { //only one toggle should checked at a time
                     toggleDelete.setChecked(false);
-                    mHandler.postDelayed(mFlashRunnable, 600);
-                    mHandler.postDelayed(mFlashRunnable, 1200);
+                    mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 600);
+                    mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1200);
                     Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
                 } else if (isChecked) {
                     //Log.d(TAG, "toggleDelete is checked");
@@ -469,18 +466,20 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked && toggleDelete.isChecked()) { //only one toggle should checked at a time
                     toggleEditAisle.setChecked(false);
-                    mHandler.postDelayed(mFlashRunnable, 600);
-                    mHandler.postDelayed(mFlashRunnable, 1200);
+                    mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 600);
+                    mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1200);
                     Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
                 } else if (isChecked) {
                     //Log.d(TAG, "toggleEditAisle is checked");
                     toggleEditAisle.setTextColor(Color.DKGRAY);
                     toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
+                    mAdapter.alternateIsToggleEditAisleCheckedValue();
                     //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("red")));
                 } else {
                     //Log.d(TAG, "toggleEditAisle is NOT checked");
                     toggleEditAisle.setTextColor(Color.BLACK);
                     toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
+                    mAdapter.alternateIsToggleEditAisleCheckedValue();
                     //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("green")));
                     if (GroceryAdapter.marketTableIsNotEmpty(mDatabase)) {
                         saveAisles();
@@ -493,7 +492,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private Runnable mFlashRunnable = new Runnable() {
+    private Runnable mToggleFlashRunnable = new Runnable() {
         @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @Override
         public void run() {
@@ -635,6 +634,7 @@ public class MainActivity extends AppCompatActivity {
                 mySelectionArgs);
         //Log.d(TAG, "number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed.
         mAdapter.swapCursorGrocery(getAllItems());
+        textViewNumOfItemsTicked.setText(mAdapter.getTickedCount() + "/" + mAdapter.getItemCount());
     }
 
 
@@ -706,6 +706,12 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton("ok", listener)
                 .create().show();
     }
+    /*
+    Notes:
+    1) when you try to add an item and there is no supermarket selected, it just automatically makes it market1AisleLocation
+    2) remember that you decided that when you press the checkbox, it doesn't update the aisle, it just sets inTrolley to true/false.
+    3) remember that the onCreate method is called every time for some reason, so your assumption that it will be called may cause problems in the actual phone.
+    */
 
     /*
     PROBLEM: when you do any sequence of activities followed by clicking on the empty spinner (i.e.
@@ -731,14 +737,10 @@ public class MainActivity extends AppCompatActivity {
     Done implementations:
     >> Make the program only accept reasonable values for the item names and aisle numbers and supermarket names.
     >> Make the toggle button that needs to be pressed flash between blue and red for a few seconds (i.e. change its color to blue and wait a few seconds then change to red).
+    */
 
+    /*
     Future implementations:
-
-    Note:
-    1) when you try to add an item and there is no supermarket selected, it just automatically makes it market1AisleLocation
-    2) remember that you decided that when you press the checkbox, it doesn't update the aisle, it just sets inTrolley to true/false.
-    3) remember that the onCreate method is called every time for some reason, so your assumption that it will be called may cause problems in the actual phone.
-
     >> When you press "Edit Spinner", a window pops up that has options: 1) "Add", which if pressed, uses the text in the market name and location editTexts to add a new supermarket
     to the spinner; 2) "Delete", which if pressed, also uses the text in the market name and location editTexts and asks the user, "are you sure you wanna delete [insert name and
     location]? to delete the given market from the spinner; 3) "Recover", which if pressed, looks at the supermarket table and displays in a recyclerview, all the supermarkets
