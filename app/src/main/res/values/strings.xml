@@ -17,8 +17,9 @@
     <string name="supermarket_example">e.g. Countdown</string>
     <string name="location_example">e.g. Northlands</string>
     <string name="supermarket_location_example">e.g. Northlands</string>
-    <string name="spinner_edit_back">Back</string>
-    <string name="spinner_edit">Edit</string>
+    <string name="button_spinner_edit_back">Back</string>
+    <string name="button_spinner_edit">Edit</string>
+    <string name="button_old_spinner_recover">Recover</string>
     <string name="spinner_edit_add_new_market">Add New Supermarket</string>
     <string name="cancel">Cancel</string>
     <string name="confirm">Confirm</string>

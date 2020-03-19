@@ -229,6 +229,7 @@ public class MainActivity extends AppCompatActivity {
             mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
             Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
         } else {
+            closeKeyboard();
             setLayoutEditSpinner();
         }
     }
@@ -326,11 +327,13 @@ public class MainActivity extends AppCompatActivity {
         Button confirmButton = findViewById(R.id.buttonConfirm);
         Button cancelButton = findViewById(R.id.buttonCancel);
         Button buttonAddItem = findViewById(R.id.buttonAddItem);
+        Spinner spinnerDeletedMarkets = findViewById(R.id.spinnerDeletedMarkets);
+        Button buttonRecoverMarkets = findViewById(R.id.buttonRecoverMarket);
 
-        Button buttonDeleteAll = findViewById(R.id.button_delete_all);
+        //Button buttonDeleteAll = findViewById(R.id.button_delete_all);
 
         if (mIsSpinnerBeingEdited) {
-            buttonEditSpinner.setText(getString(R.string.spinner_edit_back));
+            buttonEditSpinner.setText(getString(R.string.button_spinner_edit_back));
             buttonEditSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
             textViewName.setVisibility(View.VISIBLE);
             editTextName.setVisibility(View.VISIBLE);
@@ -338,13 +341,17 @@ public class MainActivity extends AppCompatActivity {
             editTextLocation.setVisibility(View.VISIBLE);
             confirmButton.setVisibility(View.VISIBLE);
             cancelButton.setVisibility(View.VISIBLE);
+            spinnerDeletedMarkets.setVisibility(View.VISIBLE);
+            buttonRecoverMarkets.setVisibility(View.VISIBLE);
 
             recyclerView.setVisibility(View.GONE);
             buttonAddItem.setVisibility(View.GONE);
             editTextNewItemName.setVisibility(View.GONE);
             toggleEditAisle.setVisibility(View.GONE);
             toggleDelete.setVisibility(View.GONE);
-            buttonDeleteAll.setVisibility(View.GONE);
+            textViewNumOfItemsTicked.setVisibility(View.GONE);
+
+            //buttonDeleteAll.setVisibility(View.GONE);
 
         } else {
             textViewName.setVisibility(View.GONE);
@@ -354,13 +361,17 @@ public class MainActivity extends AppCompatActivity {
             editTextName.setVisibility(View.GONE);
             confirmButton.setVisibility(View.GONE);
             cancelButton.setVisibility(View.GONE);
+            spinnerDeletedMarkets.setVisibility(View.GONE);
+            buttonRecoverMarkets.setVisibility(View.GONE);
 
             recyclerView.setVisibility(View.VISIBLE);
             buttonAddItem.setVisibility(View.VISIBLE);
             editTextNewItemName.setVisibility(View.VISIBLE);
             toggleEditAisle.setVisibility(View.VISIBLE);
             toggleDelete.setVisibility(View.VISIBLE);
-            buttonDeleteAll.setVisibility(View.VISIBLE);
+            textViewNumOfItemsTicked.setVisibility(View.VISIBLE);
+
+            //buttonDeleteAll.setVisibility(View.VISIBLE);
 
             closeKeyboard();
             if (spinnerMarketArray.size() == 0) {
@@ -369,7 +380,7 @@ public class MainActivity extends AppCompatActivity {
 
             } else {
                 buttonEditSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-                buttonEditSpinner.setText(getString(R.string.spinner_edit));
+                buttonEditSpinner.setText(getString(R.string.button_spinner_edit));
             }
             editTextName.getText().clear();
             editTextLocation.getText().clear();
@@ -737,16 +748,17 @@ public class MainActivity extends AppCompatActivity {
     Done implementations:
     >> Make the program only accept reasonable values for the item names and aisle numbers and supermarket names.
     >> Make the toggle button that needs to be pressed flash between blue and red for a few seconds (i.e. change its color to blue and wait a few seconds then change to red).
+    >> A textView above the ticked column in the list that displays the x/y, where x is number of ticked items and y is number of items in trolley. This value of this textview is
+    initiated in onCreate and updated whenever an item is added or removed.
     */
 
     /*
     Future implementations:
     >> When you press "Edit Spinner", a window pops up that has options: 1) "Add", which if pressed, uses the text in the market name and location editTexts to add a new supermarket
-    to the spinner; 2) "Delete", which if pressed, also uses the text in the market name and location editTexts and asks the user, "are you sure you wanna delete [insert name and
-    location]? to delete the given market from the spinner; 3) "Recover", which if pressed, looks at the supermarket table and displays in a recyclerview, all the supermarkets
-    that were removed from the spinner, and when you tap a supermarket is asks, "do you wanna recover [insert name and location]?"
-    >> A textView above the ticked column in the list that displays the x/y, where x is number of ticked items and y is number of items in trolley. This value of this textview is
-    initiated in onCreate and updated whenever an item is added or removed.
+    to the spinner if it wasn't already in the spinner, and if the market was deleted, it will just recover it automatically; 2) "Delete", which if pressed, also uses the text
+    in the market name and location editTexts and asks the user, "are you sure you wanna delete [insert name and location]? to delete the given market from the spinner;
+    3) "Recover", which if pressed, looks at the supermarket table and displays in a recyclerview, all the supermarkets that were removed from the spinner, and when you tap a
+    supermarket is asks, "do you wanna recover [insert name and location]?"
     >> When you press "Delete Item(s)", the "clear" button appears and it clears all ticked items or (if there are none) it clears all unticked items.
     >> Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
     >> Autocompletion based on the items that already exist in database.
