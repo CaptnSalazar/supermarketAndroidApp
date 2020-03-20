@@ -141,14 +141,14 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         }
         if (holder.checkBox.isChecked()) {
             holder.nameText.setTextColor(Color.GRAY);
-            holder.aisleText.setTextColor(Color.LTGRAY);
+            holder.aisleText.setTextColor(Color.GRAY);
         } else {
             holder.nameText.setTextColor(Color.BLACK);
             if (isToggleEditAisleChecked) {
                 holder.aisleText.setTextColor(Color.RED);
                 holder.aisleText.setTypeface(null, Typeface.BOLD);
             } else {
-                holder.aisleText.setTextColor(Color.DKGRAY);
+                holder.aisleText.setTextColor(Color.BLACK);
                 holder.aisleText.setTypeface(null, Typeface.NORMAL);
             }
         }
@@ -211,7 +211,10 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
 
 
     public Integer getInTrolleyValue(int position) {
-        mCursorGrocery.moveToPosition(position);
+        boolean moveSucceeded = mCursorGrocery.moveToPosition(position);
+        if (!moveSucceeded) {
+            return -1;
+        }
         Integer isInTrolley = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY));
         Log.d(TAG, "Inside getInTrolleyValue(), WAS product in trolley? " + isInTrolley);
         return isInTrolley;
@@ -229,19 +232,6 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         }
         return -1; //This code should not be reached.
     }
-
-//    public void temporarilyStoreAisles() {
-//        boolean moveSucceeded = mCursorGrocery.moveToFirst();
-//        while (moveSucceeded) {
-//            Integer aisle = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(mSelectedMarketColumnName));
-//            this.aisleArrayBeforeEdit.add(aisle);
-//            moveSucceeded = mCursorGrocery.moveToNext();
-//        }
-//    }
-//
-//    public void setAisleArrayBeforeEditToNull() {
-//        this.aisleArrayBeforeEdit = null;
-//    }
 
 
     public List<Market> getMarketsList(SQLiteDatabase database) {
@@ -307,6 +297,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
             long relativeID = cursorMarkets.getLong(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_GROCERY_COLUMN));
             Log.d(TAG, "getSelectedMarketGroceryListColumnNumber: marketName is: " + marketName + "and its relativeID is: " + relativeID);
             String selectedMarketColumnName = "market" + relativeID + "AisleLocation";
+            cursorMarkets.close();
             return selectedMarketColumnName;
         }
         cursorMarkets.close();
@@ -343,6 +334,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
                 null
         );
         boolean moveSucceeded = cursorMarkets.moveToFirst();
+        cursorMarkets.close();
         return moveSucceeded;
     }
 
@@ -374,6 +366,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     }
 
 
+    // this is possibly failing to close
     private Cursor getAllSupermarkets(SQLiteDatabase database) {
         Log.d(TAG, "getAllSupermarkets() called");
         return database.query(

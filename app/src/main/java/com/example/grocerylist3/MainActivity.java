@@ -51,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
     boolean mSwipeable;
 
     private EditText editTextNewItemName;
-    private TextView textViewNumOfItemsTicked;
     private ToggleButton toggleEditAisle;
     private ToggleButton toggleDelete;
     private Handler mHandlerToggleFlash = new Handler();
@@ -64,6 +63,10 @@ public class MainActivity extends AppCompatActivity {
     private final Integer SQL_FALSE = 0;
     private int UNACCEPTABLE_AISLE = 1;
     private int EMPTY_TEXT = 2;
+    private int mCurrentOrder = 0;
+    int ORDER_AISLE_THEN_ALPHABET = 0; // for convenient shopping
+    int ORDER_IN_TROLLEY_THEN_AISLE_THEN_ALPHABET = 1;  // for convenient shopping
+    int ORDER_ALPHABET = 2;  //for checking items you added to list.
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -97,8 +100,6 @@ public class MainActivity extends AppCompatActivity {
         setToggleEditAisleListener();
 
         editTextNewItemName = findViewById(R.id.editTextNewItem);
-        textViewNumOfItemsTicked = findViewById(R.id.textViewNumOfItemsInTrolley);
-        textViewNumOfItemsTicked.setText(mAdapter.getTickedCount() + "/" + mAdapter.getItemCount());
 
         setRecyclerViewSwipeListener();
 
@@ -116,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
             textviewSpinnerEmpty.setVisibility(View.GONE); */
             spinner.setSelection(mAdapter.getPositionMarketSelected());
         } else {
-            spinner.setVisibility(View.GONE);
             Button buttonEditSpinner = findViewById(R.id.buttonEditSpinner);
             buttonEditSpinner.setText(getString(R.string.spinner_edit_add_new_market));
             buttonEditSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
@@ -146,7 +146,6 @@ public class MainActivity extends AppCompatActivity {
         mDatabase.execSQL("DELETE FROM " + GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET);
 
         mAdapter.swapCursorGrocery(getAllItems());
-        textViewNumOfItemsTicked.setText(mAdapter.getTickedCount() + "/" + mAdapter.getItemCount());
         //mAdapter.swapCursorMarket(getAllSupermarkets());
 
         spinnerMarketArray = new ArrayList<Market>();
@@ -161,7 +160,6 @@ public class MainActivity extends AppCompatActivity {
         Button buttonEditSpinner = findViewById(R.id.buttonEditSpinner);
         buttonEditSpinner.setText(getString(R.string.spinner_edit_add_new_market));
         buttonEditSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
-        spinner.setVisibility(View.GONE);
     }
 
 
@@ -169,11 +167,13 @@ public class MainActivity extends AppCompatActivity {
         if (toggleEditAisle.isChecked()) {
             mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
             mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
-            Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
+            myShowSnackBar(R.string.snack_message_press_save_changes);
+            //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
         } else if (toggleDelete.isChecked()) {
             mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
             mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
-            Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
+            myShowSnackBar(R.string.snack_message_press_done_deleting);
+            //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
         } else {
             addItem();
         }
@@ -211,7 +211,6 @@ public class MainActivity extends AppCompatActivity {
             mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
         }
         mAdapter.swapCursorGrocery(getAllItems());
-        textViewNumOfItemsTicked.setText(mAdapter.getTickedCount() + "/" + mAdapter.getItemCount());
         recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised));
     }
 
@@ -223,11 +222,13 @@ public class MainActivity extends AppCompatActivity {
         if (toggleDelete.isChecked()) {
             mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
             mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
-            Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
+            myShowSnackBar(R.string.snack_message_press_done_deleting);
+            //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
         } else if (toggleEditAisle.isChecked()) {
             mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
             mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
-            Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
+            myShowSnackBar(R.string.snack_message_press_save_changes);
+            //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
         } else {
             closeKeyboard();
             setLayoutEditSpinner();
@@ -249,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
         EditText editTextLocation = findViewById(R.id.editTextMarketLocation);
         String newMarketLocation = editTextLocation.getText().toString().trim();
 
-        if ((newMarketName.length() == 0) && (newMarketLocation.length() == 0)){
+        if ((newMarketName.length() == 0) || (newMarketLocation.length() == 0)){
             showUnacceptableInputDialog(EMPTY_TEXT);
             return;
         }
@@ -257,7 +258,8 @@ public class MainActivity extends AppCompatActivity {
         if (GroceryAdapter.marketIsAlreadyInTable(mDatabase, newMarketName, newMarketLocation)) {
             closeKeyboard();
             // MAYBE INSTEAD OF SNACKBAR, MAKE A TEXTVIEW APPEAR SAYING IN RED, "MarketName (Location) already exists."
-            Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_market_already_in_table, Snackbar.LENGTH_SHORT).show();
+            myShowSnackBar(R.string.snack_message_market_already_in_table);
+            //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_market_already_in_table, Snackbar.LENGTH_SHORT).show();
         } else {
 
             addMarketToTable(newMarketName, newMarketLocation);
@@ -327,8 +329,6 @@ public class MainActivity extends AppCompatActivity {
         Button confirmButton = findViewById(R.id.buttonConfirm);
         Button cancelButton = findViewById(R.id.buttonCancel);
         Button buttonAddItem = findViewById(R.id.buttonAddItem);
-        Spinner spinnerDeletedMarkets = findViewById(R.id.spinnerDeletedMarkets);
-        Button buttonRecoverMarkets = findViewById(R.id.buttonRecoverMarket);
 
         //Button buttonDeleteAll = findViewById(R.id.button_delete_all);
 
@@ -341,15 +341,13 @@ public class MainActivity extends AppCompatActivity {
             editTextLocation.setVisibility(View.VISIBLE);
             confirmButton.setVisibility(View.VISIBLE);
             cancelButton.setVisibility(View.VISIBLE);
-            spinnerDeletedMarkets.setVisibility(View.VISIBLE);
-            buttonRecoverMarkets.setVisibility(View.VISIBLE);
 
             recyclerView.setVisibility(View.GONE);
             buttonAddItem.setVisibility(View.GONE);
             editTextNewItemName.setVisibility(View.GONE);
             toggleEditAisle.setVisibility(View.GONE);
             toggleDelete.setVisibility(View.GONE);
-            textViewNumOfItemsTicked.setVisibility(View.GONE);
+            findViewById(R.id.buttonReorder).setVisibility(View.GONE);
 
             //buttonDeleteAll.setVisibility(View.GONE);
 
@@ -361,15 +359,13 @@ public class MainActivity extends AppCompatActivity {
             editTextName.setVisibility(View.GONE);
             confirmButton.setVisibility(View.GONE);
             cancelButton.setVisibility(View.GONE);
-            spinnerDeletedMarkets.setVisibility(View.GONE);
-            buttonRecoverMarkets.setVisibility(View.GONE);
 
             recyclerView.setVisibility(View.VISIBLE);
             buttonAddItem.setVisibility(View.VISIBLE);
             editTextNewItemName.setVisibility(View.VISIBLE);
             toggleEditAisle.setVisibility(View.VISIBLE);
             toggleDelete.setVisibility(View.VISIBLE);
-            textViewNumOfItemsTicked.setVisibility(View.VISIBLE);
+            findViewById(R.id.buttonReorder).setVisibility(View.VISIBLE);
 
             //buttonDeleteAll.setVisibility(View.VISIBLE);
 
@@ -387,6 +383,28 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    public void onReorder(View view) {
+        if (toggleEditAisle.isChecked()) {
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
+            myShowSnackBar(R.string.snack_message_press_save_changes);
+        } else if (toggleDelete.isChecked()) {
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
+            myShowSnackBar(R.string.snack_message_press_done_deleting);
+        } else {
+            mCurrentOrder = (mCurrentOrder + 1) % 3;
+            mAdapter.swapCursorGrocery(getAllItems());
+            if (mCurrentOrder == ORDER_AISLE_THEN_ALPHABET) {
+                myShowSnackBar(R.string.snack_message_reorder_aisle);
+            } else if (mCurrentOrder == ORDER_IN_TROLLEY_THEN_AISLE_THEN_ALPHABET) {
+                myShowSnackBar(R.string.snack_message_reorder_in_trolley);
+            } else if (mCurrentOrder == ORDER_ALPHABET) {
+                myShowSnackBar(R.string.snack_message_reorder_alphabetic);
+            }
+        }
+    }
 
     private void setRecyclerViewListeners() {
         Log.d(TAG, "setRecyclerViewListeners: ");
@@ -421,12 +439,11 @@ public class MainActivity extends AppCompatActivity {
                     mySelectionArgs);
             //Log.d("MainActivity", "number of rows updated: " + numRowsUpdated);
         } else {
-            Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
+            myShowSnackBar(R.string.snack_message_press_save_changes);
+            //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
         }
 
         mAdapter.swapCursorGrocery(getAllItems());
-        textViewNumOfItemsTicked.setText(mAdapter.getTickedCount() + "/" + mAdapter.getItemCount());
-        //recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised)); //maybe call this?
     }
 
 
@@ -438,21 +455,24 @@ public class MainActivity extends AppCompatActivity {
                     toggleDelete.setChecked(false);
                     mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 600);
                     mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1200);
-                    Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
+                    myShowSnackBar(R.string.snack_message_press_save_changes);
+                    //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
                 } else if (isChecked) {
                     //Log.d(TAG, "toggleDelete is checked");
                     toggleDelete.setTextColor(Color.DKGRAY);
                     toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
                     mSwipeable = true; // make list swipeable
-                    Button buttonClear = findViewById(R.id.buttonClearList);
-                    buttonClear.setVisibility(View.VISIBLE);
+                    findViewById(R.id.buttonClearList).setVisibility(View.VISIBLE);
+                    findViewById(R.id.buttonClearList).setBackgroundTintList(ColorStateList.valueOf(Color.rgb(255, 115, 136)));
+                    findViewById(R.id.buttonReorder).setVisibility(View.GONE);
+                    myShowSnackBar(R.string.snack_message_swipe_to_delete);
                 } else {
                     //Log.d(TAG, "toggleDelete is NOT checked");
                     toggleDelete.setTextColor(Color.BLACK);
                     toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
                     mSwipeable = false; // make list unswipeable
-                    Button buttonClear = findViewById(R.id.buttonClearList);
-                    buttonClear.setVisibility(View.GONE);
+                    findViewById(R.id.buttonClearList).setVisibility(View.GONE);
+                    findViewById(R.id.buttonReorder).setVisibility(View.VISIBLE);
                 }
             }
         });
@@ -461,10 +481,36 @@ public class MainActivity extends AppCompatActivity {
     public void onClear(View view) {
         int numberOfItemsInList = mAdapter.getItemCount();
         int numberOfItemsTicked = mAdapter.getTickedCount();
+        ContentValues cv = new ContentValues();
+
         if (numberOfItemsInList == numberOfItemsTicked) {
             //remove all items from list and make
+            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_FALSE);
+            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
+            String[] mySelectionArgs = {String.valueOf(SQL_TRUE)};
+            //update(java.lang.String, android.content.ContentValues, java.lang.String, java.lang.String[])
+            int numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+                    cv,
+                    GroceryContract.GroceryEntry.COLUMN_IN_LIST + " =?",
+                    mySelectionArgs);
+            //Log.d(TAG, "number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed.
+            mAdapter.swapCursorGrocery(getAllItems());
+            Log.d(TAG, "onClear: number of items cleared: " + numRowsUpdated);
+
         } else if (numberOfItemsInList > numberOfItemsTicked) {
             //remove all ticked items from list
+            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_FALSE);
+            cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
+            String[] mySelectionArgs = {String.valueOf(SQL_TRUE)};
+            //update(java.lang.String, android.content.ContentValues, java.lang.String, java.lang.String[])
+            int numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
+                    cv,
+                    GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY + " =?",
+                    mySelectionArgs);
+            //Log.d(TAG, "number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed.
+            mAdapter.swapCursorGrocery(getAllItems());
+            Log.d(TAG, "onClear: number of items cleared: " + numRowsUpdated);
+
         } else {
             //something went wrong
         }
@@ -479,7 +525,8 @@ public class MainActivity extends AppCompatActivity {
                     toggleEditAisle.setChecked(false);
                     mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 600);
                     mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1200);
-                    Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
+                    myShowSnackBar(R.string.snack_message_press_done_deleting);
+                    //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
                 } else if (isChecked) {
                     //Log.d(TAG, "toggleEditAisle is checked");
                     toggleEditAisle.setTextColor(Color.DKGRAY);
@@ -495,7 +542,8 @@ public class MainActivity extends AppCompatActivity {
                     if (GroceryAdapter.marketTableIsNotEmpty(mDatabase)) {
                         saveAisles();
                     } else {
-                        Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_add_a_supermarket, Snackbar.LENGTH_SHORT).show();
+                        myShowSnackBar(R.string.snack_message_add_a_supermarket);
+                        //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_add_a_supermarket, Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -645,7 +693,6 @@ public class MainActivity extends AppCompatActivity {
                 mySelectionArgs);
         //Log.d(TAG, "number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed.
         mAdapter.swapCursorGrocery(getAllItems());
-        textViewNumOfItemsTicked.setText(mAdapter.getTickedCount() + "/" + mAdapter.getItemCount());
     }
 
 
@@ -671,16 +718,46 @@ public class MainActivity extends AppCompatActivity {
 
     private Cursor getAllItems() {
         //Log.d(TAG, "getAllItems() called");
-        String[] mySelectionArgs = new String[]{String.valueOf(SQL_TRUE)};
-        return mDatabase.query(
-                GroceryContract.GroceryEntry.TABLE_NAME,
-                null,
-                GroceryContract.GroceryEntry.COLUMN_IN_LIST + " =?", //equivalent to WHERE. A filter declaring which rows to return, formatted as an SQL WHERE clause (excluding the WHERE itself). Passing null will return all rows for the given table.
-                mySelectionArgs, //You may include ?s in selection, which will be replaced by the values from selectionArgs, in order that they appear in the selection. The values will be bound as Strings.
-                null,
-                null,
-                GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase) + " ASC, " + GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
-        );
+        if (mCurrentOrder == ORDER_AISLE_THEN_ALPHABET) {
+            String[] mySelectionArgs = new String[]{String.valueOf(SQL_TRUE)};
+            return mDatabase.query(
+                    GroceryContract.GroceryEntry.TABLE_NAME,
+                    null,
+                    GroceryContract.GroceryEntry.COLUMN_IN_LIST + " =?", //equivalent to WHERE. A filter declaring which rows to return, formatted as an SQL WHERE clause (excluding the WHERE itself). Passing null will return all rows for the given table.
+                    mySelectionArgs, //You may include ?s in selection, which will be replaced by the values from selectionArgs, in order that they appear in the selection. The values will be bound as Strings.
+                    null,
+                    null,
+                    GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase) + " ASC, " + GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
+            );
+
+        } else if (mCurrentOrder == ORDER_IN_TROLLEY_THEN_AISLE_THEN_ALPHABET) {
+            String[] mySelectionArgs = new String[]{String.valueOf(SQL_TRUE)};
+            return mDatabase.query(
+                    GroceryContract.GroceryEntry.TABLE_NAME,
+                    null,
+                    GroceryContract.GroceryEntry.COLUMN_IN_LIST + " =?", //equivalent to WHERE. A filter declaring which rows to return, formatted as an SQL WHERE clause (excluding the WHERE itself). Passing null will return all rows for the given table.
+                    mySelectionArgs, //You may include ?s in selection, which will be replaced by the values from selectionArgs, in order that they appear in the selection. The values will be bound as Strings.
+                    null,
+                    null,
+                    GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY + " ASC, " + GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase) + " ASC, " + GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
+            );
+
+        } else if (mCurrentOrder == ORDER_ALPHABET) {
+            String[] mySelectionArgs = new String[]{String.valueOf(SQL_TRUE)};
+            return mDatabase.query(
+                    GroceryContract.GroceryEntry.TABLE_NAME,
+                    null,
+                    GroceryContract.GroceryEntry.COLUMN_IN_LIST + " =?", //equivalent to WHERE. A filter declaring which rows to return, formatted as an SQL WHERE clause (excluding the WHERE itself). Passing null will return all rows for the given table.
+                    mySelectionArgs, //You may include ?s in selection, which will be replaced by the values from selectionArgs, in order that they appear in the selection. The values will be bound as Strings.
+                    null,
+                    null,
+                    GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
+            );
+
+        } else {
+            Log.d(TAG, "getAllItems: error: mCurrentOrder should be 0-2 inclusive");
+        }
+        return null; //something went wrong
     }
 
 
@@ -691,6 +768,22 @@ public class MainActivity extends AppCompatActivity {
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
+    }
+
+
+    private void myShowSnackBar(int resourceID) {
+        Snackbar snackbar =   Snackbar.make(findViewById(R.id.rootLayout), resourceID, Snackbar.LENGTH_LONG);
+//        snackbar.setAction("Ok", new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                //your click action.
+//            }
+//        });
+        //Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout)snackbar.getView();
+        //layout.setMinimumHeight(300);//your custom height.
+        TextView snackbarActionTextView = snackbar.getView().findViewById( com.google.android.material.R.id.snackbar_text );
+        snackbarActionTextView.setTextSize( 30 );
+        snackbar.show();
     }
 
 
@@ -754,14 +847,8 @@ public class MainActivity extends AppCompatActivity {
 
     /*
     Future implementations:
-    >> When you press "Edit Spinner", a window pops up that has options: 1) "Add", which if pressed, uses the text in the market name and location editTexts to add a new supermarket
-    to the spinner if it wasn't already in the spinner, and if the market was deleted, it will just recover it automatically; 2) "Delete", which if pressed, also uses the text
-    in the market name and location editTexts and asks the user, "are you sure you wanna delete [insert name and location]? to delete the given market from the spinner;
-    3) "Recover", which if pressed, looks at the supermarket table and displays in a recyclerview, all the supermarkets that were removed from the spinner, and when you tap a
-    supermarket is asks, "do you wanna recover [insert name and location]?"
     >> When you press "Delete Item(s)", the "clear" button appears and it clears all ticked items or (if there are none) it clears all unticked items.
     >> Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
-    >> Autocompletion based on the items that already exist in database.
     >> Make a feature that allows the user to change the supermarket they updated, in case they made a mistake and updated
     the wrong supermarket. Be like, in your last session, you updated THIS supermarket, but which supermarket did MEAN to update?
     Maybe keep track of updates by date or how distant (time-wise) the last update to a table was, e.g. if you updated the location

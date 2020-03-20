@@ -50,11 +50,11 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="7dp"
-        android:layout_marginLeft="7dp"
+        android:layout_marginStart="17dp"
+        android:layout_marginLeft="17dp"
         android:layout_marginTop="3dp"
-        android:layout_marginEnd="7dp"
-        android:layout_marginRight="7dp"
+        android:layout_marginEnd="17dp"
+        android:layout_marginRight="17dp"
         android:layout_marginBottom="8dp" />
 
     <Button
@@ -89,11 +89,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/editTextNewItem"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_toStartOf="@+id/toggleButtonEditSave"
-        android:layout_toLeftOf="@+id/toggleButtonEditSave"
         android:textOff="@string/toggle_delete_item"
         android:textOn="@string/toggle_done_deleting_item" />
 
@@ -207,7 +207,7 @@
         android:layout_toStartOf="@+id/buttonConfirm"
         android:layout_toLeftOf="@+id/buttonConfirm"
         android:onClick="onCancel"
-        android:text="@string/cancel"
+        android:text="@string/button_cancel"
         android:visibility="gone" />
 
     <Button
@@ -221,68 +221,34 @@
         android:layout_marginEnd="104dp"
         android:layout_marginRight="104dp"
         android:onClick="onConfirm"
-        android:text="@string/confirm"
+        android:text="@string/button_confirm"
         android:visibility="gone" />
-
-    <TextView
-        android:id="@+id/textViewNumOfItemsInTrolley"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonAddItem"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="8dp"
-        android:gravity="right"
-        android:text="x/y"
-        android:textSize="25sp" />
 
     <Button
         android:id="@+id/buttonClearList"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/editTextNewItem"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="0dp"
         android:layout_marginRight="0dp"
-        android:layout_toStartOf="@+id/toggleButtonDeleteItem"
-        android:layout_toLeftOf="@+id/toggleButtonDeleteItem"
-        android:layout_toEndOf="@+id/textViewNumOfItemsInTrolley"
-        android:layout_toRightOf="@+id/textViewNumOfItemsInTrolley"
-        android:text="@string/button_clear_ticked_then_unticked"
+        android:layout_toEndOf="@+id/toggleButtonDeleteItem"
+        android:layout_toRightOf="@+id/toggleButtonDeleteItem"
         android:onClick="onClear"
-        android:visibility="gone" />
-
-    <Spinner
-        android:id="@+id/spinnerDeletedMarkets"
-        android:layout_width="320dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonCancel"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="37dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_toEndOf="@+id/buttonRecoverMarket"
-        android:layout_toRightOf="@+id/buttonRecoverMarket"
+        android:text="@string/button_clear_ticked_then_unticked"
         android:visibility="gone" />
 
     <Button
-        android:id="@+id/buttonRecoverMarket"
+        android:id="@+id/buttonReorder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/buttonCancel"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentLeft="true"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="26dp"
-        android:text="@string/button_old_spinner_recover"
-        android:visibility="gone" />
+        android:layout_below="@+id/editTextNewItem"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="43dp"
+        android:layout_marginRight="43dp"
+        android:layout_toStartOf="@+id/buttonAddItem"
+        android:layout_toLeftOf="@+id/buttonAddItem"
+        android:onClick="onReorder"
+        android:text="@string/button_reorder" />
 
 </RelativeLayout>

@@ -37,7 +37,7 @@
 
     <EditText
         android:id="@+id/editTextAisleNumber"
-        android:layout_width="30dp"
+        android:layout_width="10dp"
         android:layout_height="match_parent"
         android:layout_weight="0.4"
         android:background="@null"
