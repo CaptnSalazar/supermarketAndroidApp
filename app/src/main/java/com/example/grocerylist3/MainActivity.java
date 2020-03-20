@@ -67,6 +67,8 @@ public class MainActivity extends AppCompatActivity {
     int ORDER_AISLE_THEN_ALPHABET = 0; // for convenient shopping
     int ORDER_IN_TROLLEY_THEN_AISLE_THEN_ALPHABET = 1;  // for convenient shopping
     int ORDER_ALPHABET = 2;  //for checking items you added to list.
+    int itemsDeletedInSuccession = 0;
+
 
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -458,6 +460,7 @@ public class MainActivity extends AppCompatActivity {
                     myShowSnackBar(R.string.snack_message_press_save_changes);
                     //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
                 } else if (isChecked) {
+                    itemsDeletedInSuccession = 0;
                     //Log.d(TAG, "toggleDelete is checked");
                     toggleDelete.setTextColor(Color.DKGRAY);
                     toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
@@ -664,6 +667,14 @@ public class MainActivity extends AppCompatActivity {
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 if (toggleDelete.isChecked()) {
                     removeItem((long) viewHolder.itemView.getTag());
+                    itemsDeletedInSuccession++;
+                    if (itemsDeletedInSuccession == 2) {
+                        /* show a dialog pop up that asks, would you like to clear the list?
+                        If the user presses "Yes, Clear List" then another pop up appears asking if they wanna clear all or clear just the ticked or if they wanna cancel.
+                        If the user presses "No", then set itemsDeletedInSuccession to -3, so that next time it will take 5 deletes, instead of 2, to trigger the "clear all?" pop up.
+                        Also, take into account how many items are in the list. If there are 4 or less, then "clear all" will not pop up.
+                        */
+                    }
                 }
                 /* else {
                     Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_delete_items, Snackbar.LENGTH_SHORT).show();
@@ -847,6 +858,7 @@ public class MainActivity extends AppCompatActivity {
 
     /*
     Future implementations:
+    >> See the onSwipe function !!!
     >> When you press "Delete Item(s)", the "clear" button appears and it clears all ticked items or (if there are none) it clears all unticked items.
     >> Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
     >> Make a feature that allows the user to change the supermarket they updated, in case they made a mistake and updated
