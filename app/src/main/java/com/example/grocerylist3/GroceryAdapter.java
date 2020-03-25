@@ -175,6 +175,25 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         return numberOfTickedItems;
     }
 
+    public List<String> getItemArrayFromGroceryTable(SQLiteDatabase database) {
+        List<String> itemArray = new ArrayList<String>();
+        Cursor cursorAllGroceryItems = database.query(
+                GroceryContract.GroceryEntry.TABLE_NAME,
+                null,
+                null,
+                null,
+                null,
+                null,
+                GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
+        );
+        cursorAllGroceryItems.moveToFirst();
+        do  {
+            String itemName = cursorAllGroceryItems.getString(cursorAllGroceryItems.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
+            itemArray.add(itemName);
+        }while(cursorAllGroceryItems.moveToNext());
+        return itemArray;
+    }
+
     public void alternateIsToggleEditAisleCheckedValue() {
         isToggleEditAisleChecked = !isToggleEditAisleChecked;
         notifyDataSetChanged();

@@ -101,7 +101,8 @@ public class MainActivity extends AppCompatActivity {
         setToggleEditAisleListener();
 
         autoCompTxtViewItemName = findViewById(R.id.autoCompTextViewNewItem);
-        ArrayAdapter<String> adapterAutoComp = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, ITEM_SUGGESTIONS);
+        ArrayAdapter<String> adapterAutoComp = new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1, mAdapter.getItemArrayFromGroceryTable(mDatabase));
         autoCompTxtViewItemName.setAdapter(adapterAutoComp);
 
         setRecyclerViewSwipeListener();
@@ -141,7 +142,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
+    private void updateAutoCompleteTextViewArray() {
+        ArrayAdapter<String> adapterAutoComp = new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1, mAdapter.getItemArrayFromGroceryTable(mDatabase));
+        autoCompTxtViewItemName.setAdapter(adapterAutoComp);
+    }
 
 
     public void onDeleteAllRows(View view) {
@@ -222,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
         //Log.d("MainActivity", "number of rows updated: " + numRowsUpdated);
         if (numRowsUpdated < 1) {
             mDatabase.insert(GroceryContract.GroceryEntry.TABLE_NAME, null, cv);
+            updateAutoCompleteTextViewArray();
         }
         mAdapter.swapCursorGrocery(getAllItems());
         recyclerView.scrollToPosition(mAdapter.getItemPosition(nameCapitalised));

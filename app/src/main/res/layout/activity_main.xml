@@ -24,7 +24,7 @@
         android:layout_toLeftOf="@+id/buttonAddItem"
         android:ems="10"
         android:hint="@string/product_name"
-        android:completionThreshold="2"
+        android:completionThreshold="3"
         android:importantForAutofill="no"
         android:inputType="textPersonName"
         android:textSize="20sp"/>
