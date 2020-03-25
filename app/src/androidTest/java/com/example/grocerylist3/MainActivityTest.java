@@ -78,11 +78,11 @@ If you want to use a resource of your test app (e.g. a test input for one of you
 
     @Test
     public void addingItemTest() {
-        onView(withId(R.id.editTextNewItem));   //Look for a property that helps to find the editTextNewItem. The editText in MainActivity has a unique R.id, as expected.
-        onView(withId(R.id.editTextNewItem)).perform(typeText("Orange"));
+        onView(withId(R.id.autoCompTextViewNewItem));   //Look for a property that helps to find the editTextNewItem. The editText in MainActivity has a unique R.id, as expected.
+        onView(withId(R.id.autoCompTextViewNewItem)).perform(typeText("Orange"));
         onView(withId(R.id.buttonAddItem));     //Look for a property that helps to find the buttonAddItem. The button in the MainActivity has a unique R.id, as expected.
         onView(withId(R.id.buttonAddItem)).perform(click());   //Perform the click
-        onView(withId(R.id.editTextNewItem)).check(matches(withText(""))); //editTextNewItem should be cleared when we press "Add"
+        onView(withId(R.id.autoCompTextViewNewItem)).check(matches(withText(""))); //editTextNewItem should be cleared when we press "Add"
     }
 
 
@@ -239,13 +239,13 @@ If you want to use a resource of your test app (e.g. a test input for one of you
 
     private void closeKeyboardByAddingPreExistingItemThatYouWannaCheck(String itemName) {
         ViewInteraction appCompatEditText = onView(
-                Matchers.allOf(withId(R.id.editTextNewItem),
+                Matchers.allOf(withId(R.id.autoCompTextViewNewItem),
                         childAtPosition(Matchers.allOf(withId(R.id.rootLayout), childAtPosition(withId(android.R.id.content),0)),0),
                         isDisplayed()));
         appCompatEditText.perform(click());
 
         ViewInteraction appCompatEditText2 = onView(
-                Matchers.allOf(withId(R.id.editTextNewItem),
+                Matchers.allOf(withId(R.id.autoCompTextViewNewItem),
                         childAtPosition(
                                 Matchers.allOf(withId(R.id.rootLayout),
                                         childAtPosition(
@@ -276,7 +276,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
 
         onView(withId(R.id.buttonEditSpinner)).check(matches(isDisplayed()));
 
-        onView(withId(R.id.editTextNewItem)).check(matches(isDisplayed()));
+        onView(withId(R.id.autoCompTextViewNewItem)).check(matches(isDisplayed()));
         onView(withId(R.id.buttonAddItem)).check(matches(isDisplayed()));
         onView(withId(R.id.toggleButtonDeleteItem)).check(matches(isDisplayed()));
         onView(withId(R.id.toggleButtonEditSave)).check(matches(isDisplayed()));
@@ -292,7 +292,7 @@ If you want to use a resource of your test app (e.g. a test input for one of you
 
         onView(withId(R.id.buttonEditSpinner)).check(matches(isDisplayed()));
 
-        onView(withId(R.id.editTextNewItem)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.autoCompTextViewNewItem)).check(matches(not(isDisplayed())));
         onView(withId(R.id.buttonAddItem)).check(matches(not(isDisplayed())));
         onView(withId(R.id.toggleButtonDeleteItem)).check(matches(not(isDisplayed())));
         onView(withId(R.id.toggleButtonEditSave)).check(matches(not(isDisplayed())));

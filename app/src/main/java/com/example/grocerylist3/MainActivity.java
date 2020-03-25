@@ -24,6 +24,7 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -41,7 +42,7 @@ import java.util.regex.Pattern;
 
 /* >> Figure out what branching is and if it can help you not delete git stuff permanently like you would if you roll back to previous commit. <<<<<<<*/
 /* >> CHECK Future Implementations AT THE BOTTOM OF THIS DOCUMENT TO SEE WHAT TO DO NEXT <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<*/
-
+//@RequiresApi (api = Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) //tried this is because for some reason android studio started thinking i wanted api 1
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity*<*<*<*<*<*";
     private SQLiteDatabase mDatabase;
@@ -50,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     boolean mSwipeable;
 
-    private EditText editTextNewItemName;
+    private AutoCompleteTextView autoCompTxtViewItemName;
     private ToggleButton toggleEditAisle;
     private ToggleButton toggleDelete;
     private Handler mHandlerToggleFlash = new Handler();
@@ -61,15 +62,13 @@ public class MainActivity extends AppCompatActivity {
     private boolean mIsSpinnerBeingEdited = false;
     private final Integer SQL_TRUE = 1;
     private final Integer SQL_FALSE = 0;
-    private int UNACCEPTABLE_AISLE = 1;
-    private int EMPTY_TEXT = 2;
     private int mCurrentOrder = 0;
     int ORDER_AISLE_THEN_ALPHABET = 0; // for convenient shopping
     int ORDER_IN_TROLLEY_THEN_AISLE_THEN_ALPHABET = 1;  // for convenient shopping
     int ORDER_ALPHABET = 2;  //for checking items you added to list.
-    int itemsDeletedInSuccession = 0;
+    int requiredItemDeletionSuccession = 2;
 
-
+    private static final String[] ITEM_SUGGESTIONS = new String[] {"Apple", "Abacus", "Amplifier", "Appendix", "Apostrophe", "Appple"};
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
@@ -101,7 +100,9 @@ public class MainActivity extends AppCompatActivity {
         //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("green")));
         setToggleEditAisleListener();
 
-        editTextNewItemName = findViewById(R.id.editTextNewItem);
+        autoCompTxtViewItemName = findViewById(R.id.autoCompTextViewNewItem);
+        ArrayAdapter<String> adapterAutoComp = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, ITEM_SUGGESTIONS);
+        autoCompTxtViewItemName.setAdapter(adapterAutoComp);
 
         setRecyclerViewSwipeListener();
 
@@ -167,13 +168,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void onAddItem(View view) {
         if (toggleEditAisle.isChecked()) {
-            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
-            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 400);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1100);
             myShowSnackBar(R.string.snack_message_press_save_changes);
             //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
         } else if (toggleDelete.isChecked()) {
-            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 700);
-            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1400);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 400);
+            mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1100);
             myShowSnackBar(R.string.snack_message_press_done_deleting);
             //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
         } else {
@@ -190,14 +191,24 @@ public class MainActivity extends AppCompatActivity {
         //Log.d(TAG, "addItem() called");
         //Log.d(TAG, "inside addItem and toggleEditAisle value is " + toggleEditAisle.isChecked());
         //Log.d(TAG, "inside addItem and toggleDelete value is " + toggleDelete.isChecked());
-        String name = editTextNewItemName.getText().toString().trim();
-        editTextNewItemName.getText().clear();
+        String name = autoCompTxtViewItemName.getText().toString().trim();
+        autoCompTxtViewItemName.getText().clear();
 
         if (name.length() == 0) {
             return;
         }
 
         String nameCapitalised = name.substring(0, 1).toUpperCase() + name.substring(1);
+        /*String nameSuggestionShortcut = null;
+        if (name.length() > 5) {
+            nameSuggestionShortcut = name.substring(0, 4);
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            // On JellyBean & above, you can provide a shortcut and an explicit Locale
+            UserDictionary.Words.addWord(this, nameCapitalised, 250, nameSuggestionShortcut, Locale.getDefault());
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.CUPCAKE) {
+            UserDictionary.Words.addWord(this, nameCapitalised, 250, UserDictionary.Words.LOCALE_TYPE_CURRENT);
+        } */
 
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, nameCapitalised);
@@ -253,7 +264,8 @@ public class MainActivity extends AppCompatActivity {
         String newMarketLocation = editTextLocation.getText().toString().trim();
 
         if ((newMarketName.length() == 0) || (newMarketLocation.length() == 0)){
-            showUnacceptableInputDialog(EMPTY_TEXT);
+            myShowSnackBar(R.string.snack_message_market_name_or_location_empty);
+            //showDialogUnacceptableAisle();
             return;
         }
 
@@ -346,7 +358,7 @@ public class MainActivity extends AppCompatActivity {
 
             recyclerView.setVisibility(View.GONE);
             buttonAddItem.setVisibility(View.GONE);
-            editTextNewItemName.setVisibility(View.GONE);
+            autoCompTxtViewItemName.setVisibility(View.GONE);
             toggleEditAisle.setVisibility(View.GONE);
             toggleDelete.setVisibility(View.GONE);
             findViewById(R.id.buttonReorder).setVisibility(View.GONE);
@@ -364,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
 
             recyclerView.setVisibility(View.VISIBLE);
             buttonAddItem.setVisibility(View.VISIBLE);
-            editTextNewItemName.setVisibility(View.VISIBLE);
+            autoCompTxtViewItemName.setVisibility(View.VISIBLE);
             toggleEditAisle.setVisibility(View.VISIBLE);
             toggleDelete.setVisibility(View.VISIBLE);
             findViewById(R.id.buttonReorder).setVisibility(View.VISIBLE);
@@ -460,33 +472,30 @@ public class MainActivity extends AppCompatActivity {
                     myShowSnackBar(R.string.snack_message_press_save_changes);
                     //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
                 } else if (isChecked) {
-                    itemsDeletedInSuccession = 0;
+                    closeKeyboard();
+                    requiredItemDeletionSuccession = 2;
                     //Log.d(TAG, "toggleDelete is checked");
                     toggleDelete.setTextColor(Color.DKGRAY);
                     toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
                     mSwipeable = true; // make list swipeable
-                    findViewById(R.id.buttonClearList).setVisibility(View.VISIBLE);
-                    findViewById(R.id.buttonClearList).setBackgroundTintList(ColorStateList.valueOf(Color.rgb(255, 115, 136)));
-                    findViewById(R.id.buttonReorder).setVisibility(View.GONE);
                     myShowSnackBar(R.string.snack_message_swipe_to_delete);
                 } else {
                     //Log.d(TAG, "toggleDelete is NOT checked");
                     toggleDelete.setTextColor(Color.BLACK);
                     toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
                     mSwipeable = false; // make list unswipeable
-                    findViewById(R.id.buttonClearList).setVisibility(View.GONE);
-                    findViewById(R.id.buttonReorder).setVisibility(View.VISIBLE);
                 }
             }
         });
     }
 
-    public void onClear(View view) {
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void clearGroceryList() {
         int numberOfItemsInList = mAdapter.getItemCount();
         int numberOfItemsTicked = mAdapter.getTickedCount();
         ContentValues cv = new ContentValues();
 
-        if (numberOfItemsInList == numberOfItemsTicked) {
+        if (numberOfItemsTicked == 0) {
             //remove all items from list and make
             cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_FALSE);
             cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
@@ -498,7 +507,11 @@ public class MainActivity extends AppCompatActivity {
                     mySelectionArgs);
             //Log.d(TAG, "number of rows updated: " + numRowsUpdated); //Integer is automatically converted to String if needed.
             mAdapter.swapCursorGrocery(getAllItems());
-            Log.d(TAG, "onClear: number of items cleared: " + numRowsUpdated);
+            toggleDelete.setChecked(false);
+            toggleDelete.setTextColor(Color.BLACK);
+            toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
+            mSwipeable = false; // make list unswipeable
+            Log.d(TAG, "clearGroceryList: " + numRowsUpdated);
 
         } else if (numberOfItemsInList > numberOfItemsTicked) {
             //remove all ticked items from list
@@ -590,9 +603,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void saveAisles() {
         //Log.d(TAG, "saveAisles() called");
         View v; // v will be each item (i.e. one set of aisleNumber, productName, checkBox views) in recyclerview.
+        boolean atLeastOneAisleIsInvalid = false;
+        String nameOfFirstItemWithInvalidAisle = "";
         for (int i = 0; i < recyclerView.getChildCount(); i++) {
             //Log.d(TAG, "saveAisles: we are at the " + String.valueOf(i) + "th value of the recyclerview ------");
             v = recyclerView.getChildAt(i); // v encapsulates a pair of aisle editText and product name EditText.
@@ -607,20 +623,32 @@ public class MainActivity extends AppCompatActivity {
             if (aisleOrProductIsValid(aisleNumberStr, productNameStr)) {
                 updateAisle(aisleNumberStr, productNameStr);
             } else {
-                break;
+                if (!atLeastOneAisleIsInvalid) {//check if atLeastOneAisleIsInvalid was already set to true because we will scroll to the first invalid aisle.
+                    atLeastOneAisleIsInvalid = true;
+                    nameOfFirstItemWithInvalidAisle = productNameStr;
+                }
+                //break;
             }
             //aisleEditText.setKeyListener(null); //makes the EditText non-editable so, it acts like a TextView.
+        }
+        if (atLeastOneAisleIsInvalid) {
+            toggleEditAisle.setChecked(true);
+            toggleEditAisle.setTextColor(Color.DKGRAY);
+            toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
+            mAdapter.alternateIsToggleEditAisleCheckedValue();
+            recyclerView.scrollToPosition(mAdapter.getItemPosition(nameOfFirstItemWithInvalidAisle));
         }
     }
 
 
     private boolean aisleOrProductIsValid(String aisleNumberStr, String productNameStr) {
         if (!aisleNumberStr.equals("?") && (aisleNumberStr.length() > 0) && (!isNumeric(aisleNumberStr))) {
-            showUnacceptableInputDialog(UNACCEPTABLE_AISLE);
+            //myShowSnackBar(R.string.snack_message_invalid_aisle);
+            showDialogUnacceptableAisle();
             return false;
-        } else if (productNameStr.length() == 0) {
+        /*} else if (productNameStr.length() == 0) {
             showUnacceptableInputDialog(EMPTY_TEXT);
-            return false;
+            return false; */
         } else {
             return true;
         }
@@ -667,11 +695,14 @@ public class MainActivity extends AppCompatActivity {
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 if (toggleDelete.isChecked()) {
                     removeItem((long) viewHolder.itemView.getTag());
-                    itemsDeletedInSuccession++;
-                    if (itemsDeletedInSuccession == 2) {
+                    requiredItemDeletionSuccession--;
+                    int SUCCESSIVE_DELETIONS_TRIGGER = 0;
+                    int MIN_ITEM_AMOUNT_FOR_CLEAR_LIST = 3; //if there are 4 remaining items on the list at the time.
+                    if ((requiredItemDeletionSuccession == SUCCESSIVE_DELETIONS_TRIGGER) && (mAdapter.getItemCount() >= MIN_ITEM_AMOUNT_FOR_CLEAR_LIST)) {
+                        showDialogAskToClearList();
                         /* show a dialog pop up that asks, would you like to clear the list?
                         If the user presses "Yes, Clear List" then another pop up appears asking if they wanna clear all or clear just the ticked or if they wanna cancel.
-                        If the user presses "No", then set itemsDeletedInSuccession to -3, so that next time it will take 5 deletes, instead of 2, to trigger the "clear all?" pop up.
+                        If the user presses "No", then set itemsDeletedInSuccession to -5, so that next time it will take 5 deletes, instead of 2, to trigger the "clear all?" pop up.
                         Also, take into account how many items are in the list. If there are 4 or less, then "clear all" will not pop up.
                         */
                     }
@@ -784,30 +815,28 @@ public class MainActivity extends AppCompatActivity {
 
     private void myShowSnackBar(int resourceID) {
         Snackbar snackbar =   Snackbar.make(findViewById(R.id.rootLayout), resourceID, Snackbar.LENGTH_LONG);
-//        snackbar.setAction("Ok", new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                //your click action.
-//            }
-//        });
+
+        TextView snackbarActionTextView = snackbar.getView().findViewById( com.google.android.material.R.id.snackbar_action );
+        snackbarActionTextView.setTextSize( 30 );
+        //snackbarActionTextView.setTypeface(snackbarActionTextView.getTypeface(), Typeface.BOLD);
+        snackbar.setAction("Ok", new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //your click action.
+            }
+        });
+
         //Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout)snackbar.getView();
         //layout.setMinimumHeight(300);//your custom height.
-        TextView snackbarActionTextView = snackbar.getView().findViewById( com.google.android.material.R.id.snackbar_text );
-        snackbarActionTextView.setTextSize( 30 );
+        TextView snackbarTextView = snackbar.getView().findViewById( com.google.android.material.R.id.snackbar_text );
+        snackbarTextView.setTextSize( 30 );
         snackbar.show();
     }
 
 
-    private void showUnacceptableInputDialog(int flag) {
-        String title = "";
-        String message = "";
-        if (flag == UNACCEPTABLE_AISLE) {
-            title = "Aisle must be either: NUMBER, EMPTY, or '?'";
-            message = "EMPTY: sets aisle to what it was previously.\n'?' sets the aisle to unknown, like it was originally.";
-        } else if (flag == EMPTY_TEXT) {
-            title = "Empty text not accepted, sorry  :(";
-            message = "Write something... write SOMETHING!";
-        }
+    private void showDialogUnacceptableAisle() {
+        String title = "Aisle must be either:\nNUMBER, EMPTY, or '?'";
+        String message = "EMPTY: sets aisle to what it was previously.\n'?' sets the aisle to unknown, like it was originally.";
         DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -821,6 +850,51 @@ public class MainActivity extends AppCompatActivity {
                 .setPositiveButton("ok", listener)
                 .create().show();
     }
+
+
+    private void showDialogAskToClearList() {
+        int numberOfItemsInList = mAdapter.getItemCount();
+        int numberOfItemsTicked = mAdapter.getTickedCount();
+        Log.d(TAG, "showDialogAskToClearList: numberOfItemsInList: " + numberOfItemsInList);
+        Log.d(TAG, "showDialogAskToClearList: numberOfItemsTicked: " + numberOfItemsTicked);
+        String title = "Clear List?";
+        String message = "";
+        if (numberOfItemsTicked == 0) {
+            Log.d(TAG, "showDialogAskToClearList: numberOfItemsInList == numberOfItemsTicked");
+            message = "Remove all items from list?";
+        } else if (numberOfItemsInList > numberOfItemsTicked) {
+            Log.d(TAG, "showDialogAskToClearList: numberOfItemsInList > numberOfItemsTicked");
+            message = "Remove all ticked items from list?";
+        }
+
+        DialogInterface.OnClickListener listenerYes = new DialogInterface.OnClickListener() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "onClick: about to call clearGroceryList()");
+                requiredItemDeletionSuccession = 2;
+                clearGroceryList();
+                dialog.dismiss();
+            }
+        };
+
+        DialogInterface.OnClickListener listenerNo = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Log.d(TAG, "onClick: don't delte anything");
+                requiredItemDeletionSuccession = 5;
+                dialog.dismiss();
+            }
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("Yes", listenerYes)
+                .setNegativeButton("No", listenerNo)
+                .create().show();
+    }
+
     /*
     Notes:
     1) when you try to add an item and there is no supermarket selected, it just automatically makes it market1AisleLocation
@@ -854,24 +928,18 @@ public class MainActivity extends AppCompatActivity {
     >> Make the toggle button that needs to be pressed flash between blue and red for a few seconds (i.e. change its color to blue and wait a few seconds then change to red).
     >> A textView above the ticked column in the list that displays the x/y, where x is number of ticked items and y is number of items in trolley. This value of this textview is
     initiated in onCreate and updated whenever an item is added or removed.
+    >> When you press "Delete Item(s)", the "clear" button appears and it clears all ticked items or (if there are none) it clears all unticked items.
     */
 
     /*
     Future implementations:
-    >> See the onSwipe function !!!
-    >> When you press "Delete Item(s)", the "clear" button appears and it clears all ticked items or (if there are none) it clears all unticked items.
+    >> Allow user to input quantity, e.g. 4.5kg x Carrot. The default is Item name (without quantity)
     >> Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
-    >> Make a feature that allows the user to change the supermarket they updated, in case they made a mistake and updated
-    the wrong supermarket. Be like, in your last session, you updated THIS supermarket, but which supermarket did MEAN to update?
-    Maybe keep track of updates by date or how distant (time-wise) the last update to a table was, e.g. if you updated the location
-    of cocoa powder and then 4 hours later updated the position of flour, if there are not updates in between to connect the two,
-    the program will regard these as two separate sessions.
-    Make an undo feature, google how to make undo using sqlite with/or in android studio.
-    >> Make a button "Clear". When you press the button, it reveals two options: "clear ticked items", and "clear all".
     >> Make background thread (see your java google docs for link)
-    >> Order the list by whether the item is inTrolley/ticked as well as aisle number and alphabetically.
-    >> If user goes to edit an item but just leaves it blank, reset everything to the way it was because for some reason I'm unable to
-    add a click listener to aisleEditText or itemNameEditText.
+    >> Have a button to recover all deleted, so you don't have to display which ones were deleted.
+    >> Have a dictionary that looks at all items you added
+    >> Allow copy and paste if it's separated by a comma or
+    >> If you long press an item or supermarket, you delete it (except you can recover all supermarkets)
      */
 
 }

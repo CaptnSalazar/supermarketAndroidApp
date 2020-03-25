@@ -47,5 +47,6 @@
         android:importantForAutofill="no"
         android:inputType="textVisiblePassword"
         android:textSize="24sp" />
+    <!--        android:paddingHorizontal="8dp"-->
 
 </LinearLayout>

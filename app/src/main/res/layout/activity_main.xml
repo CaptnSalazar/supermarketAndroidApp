@@ -8,8 +8,8 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
-    <EditText
-        android:id="@+id/editTextNewItem"
+    <AutoCompleteTextView
+        android:id="@+id/autoCompTextViewNewItem"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/buttonEditSpinner"
@@ -24,8 +24,10 @@
         android:layout_toLeftOf="@+id/buttonAddItem"
         android:ems="10"
         android:hint="@string/product_name"
+        android:completionThreshold="2"
         android:importantForAutofill="no"
-        android:inputType="textPersonName" />
+        android:inputType="textPersonName"
+        android:textSize="20sp"/>
 
     <Button
         android:id="@+id/buttonAddItem"
@@ -75,7 +77,7 @@
         android:id="@+id/toggleButtonEditSave"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextNewItem"
+        android:layout_below="@+id/autoCompTextViewNewItem"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_marginTop="8dp"
@@ -88,7 +90,7 @@
         android:id="@+id/toggleButtonDeleteItem"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextNewItem"
+        android:layout_below="@+id/autoCompTextViewNewItem"
         android:layout_alignParentStart="true"
         android:layout_alignParentLeft="true"
         android:layout_marginStart="8dp"
@@ -225,24 +227,10 @@
         android:visibility="gone" />
 
     <Button
-        android:id="@+id/buttonClearList"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextNewItem"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="0dp"
-        android:layout_marginRight="0dp"
-        android:layout_toEndOf="@+id/toggleButtonDeleteItem"
-        android:layout_toRightOf="@+id/toggleButtonDeleteItem"
-        android:onClick="onClear"
-        android:text="@string/button_clear_ticked_then_unticked"
-        android:visibility="gone" />
-
-    <Button
         android:id="@+id/buttonReorder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextNewItem"
+        android:layout_below="@+id/autoCompTextViewNewItem"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="43dp"
         android:layout_marginRight="43dp"

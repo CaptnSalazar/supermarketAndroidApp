@@ -27,4 +27,5 @@
     <string name="snack_message_reorder_aisle">Ordered by aisle number.</string>
     <string name="snack_message_reorder_in_trolley">Ordered by ticked.</string>
     <string name="snack_message_reorder_alphabetic">Ordered alphabetically.</string>
+    <string name="snack_message_market_name_or_location_empty">Name and Location cannot be empty.</string>
 </resources>
