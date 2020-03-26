@@ -9,6 +9,7 @@ public class GroceryContract {
     public static final class GroceryEntry implements BaseColumns {
         public static final String TABLE_NAME = "groceryList3";
         public static final String COLUMN_NAME = "name";
+        public static final String COLUMN_TEMP_QUANTITY = "temporaryQuantity";
         public static final String COLUMN_IN_LIST = "isInList";
         public static final String COLUMN_IN_TROLLEY = "isInTrolley";
         public static final String COLUMN_TIMESTAMP = "times";

@@ -125,12 +125,18 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         }
 
         String name = mCursorGrocery.getString(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
+        String quantity = mCursorGrocery.getString(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_TEMP_QUANTITY));
+        if (quantity == null) {
+            quantity = "1";
+        }
+        Log.d(TAG, "onBindViewHolder: the quantity is " + quantity);
         Log.d(TAG, "onBindViewHolder:  mSelectedMarketColumnName is " + mSelectedMarketColumnName + " <<<<<<<<<<<<<<<<<<<<<<<<<");
         Integer aisle = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(mSelectedMarketColumnName));
+        Log.d(TAG, "onBindViewHolder: the aisle number is " + aisle);
         Integer isInTrolley = mCursorGrocery.getInt(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY));
         long id = mCursorGrocery.getLong(mCursorGrocery.getColumnIndex(GroceryContract.GroceryEntry._ID));
 
-        holder.nameText.setText(name);
+        holder.nameText.setText(quantity + "  " + name);
         holder.checkBox.setChecked(integerToBoolean(isInTrolley));
         holder.itemView.setTag(id); //An ItemView in Android can be described as a single row item in a list. It references an item from where we find the view from its layout file.
 
@@ -139,18 +145,24 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
         } else {
             holder.aisleText.setText(String.valueOf(aisle));
         }
+
+        if (isToggleEditAisleChecked) {
+            holder.aisleText.setTextColor(Color.RED);
+            holder.aisleText.setTypeface(null, Typeface.BOLD);
+            holder.aisleText.setEnabled(true);
+            //holder.aisleText.setInputType(InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+        } else {
+            holder.aisleText.setTextColor(Color.BLACK);
+            holder.aisleText.setTypeface(null, Typeface.NORMAL);
+            holder.aisleText.setEnabled(false);
+        }
+
         if (holder.checkBox.isChecked()) {
             holder.nameText.setTextColor(Color.GRAY);
             holder.aisleText.setTextColor(Color.GRAY);
         } else {
             holder.nameText.setTextColor(Color.BLACK);
-            if (isToggleEditAisleChecked) {
-                holder.aisleText.setTextColor(Color.RED);
-                holder.aisleText.setTypeface(null, Typeface.BOLD);
-            } else {
-                holder.aisleText.setTextColor(Color.BLACK);
-                holder.aisleText.setTypeface(null, Typeface.NORMAL);
-            }
+            //holder.aisleText.setTextColor(Color.BLACK);
         }
 
     }
@@ -186,11 +198,13 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
                 null,
                 GroceryContract.GroceryEntry.COLUMN_NAME + " ASC"
         );
-        cursorAllGroceryItems.moveToFirst();
-        do  {
+        boolean moveSucceeded = cursorAllGroceryItems.moveToFirst();
+        while (moveSucceeded) {
             String itemName = cursorAllGroceryItems.getString(cursorAllGroceryItems.getColumnIndex(GroceryContract.GroceryEntry.COLUMN_NAME));
             itemArray.add(itemName);
-        }while(cursorAllGroceryItems.moveToNext());
+            moveSucceeded = cursorAllGroceryItems.moveToNext();
+        }
+        cursorAllGroceryItems.close();
         return itemArray;
     }
 

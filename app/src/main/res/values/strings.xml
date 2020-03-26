@@ -2,6 +2,7 @@
     <string name="app_name">GroceryList3</string>
     <string name="aisle_default">\?</string>
     <string name="product_name">Product name</string>
+    <string name="product_quantity">1x</string>
     <string name="button_add_new_item">Add</string>
     <string name="button_clear_ticked_then_unticked">Clear List</string>
     <string name="toggle_edit_list">Edit Aisles</string>

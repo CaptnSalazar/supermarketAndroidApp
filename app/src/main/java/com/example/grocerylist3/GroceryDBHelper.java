@@ -8,7 +8,7 @@ import androidx.annotation.Nullable;
 
 public class GroceryDBHelper extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "grocerylist3.db";
-    public static final int DATABASE_VERSION = 3;
+    public static final int DATABASE_VERSION = 4;
 
     public GroceryDBHelper(@Nullable Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -25,6 +25,7 @@ public class GroceryDBHelper extends SQLiteOpenHelper {
                 GroceryContract.GroceryEntry.TABLE_NAME + " (" +
                 GroceryContract.GroceryEntry._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 GroceryContract.GroceryEntry.COLUMN_NAME + " TEXT NOT NULL, " +
+                GroceryContract.GroceryEntry.COLUMN_TEMP_QUANTITY + " TEXT, " +
                 GroceryContract.GroceryEntry.COLUMN_TIMESTAMP + " TIMESTAMP DEFAULT CURRENT_TIMESTAMP," +
                 GroceryContract.GroceryEntry.COLUMN_IN_LIST + " INTEGER DEFAULT 1, " +
                 GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY + " INTEGER DEFAULT 0, " +

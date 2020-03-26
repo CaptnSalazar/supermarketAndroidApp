@@ -123,7 +123,8 @@ public class MainActivity extends AppCompatActivity {
         } else {
             Button buttonEditSpinner = findViewById(R.id.buttonEditSpinner);
             buttonEditSpinner.setText(getString(R.string.spinner_edit_add_new_market));
-            buttonEditSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 25);
+            buttonEditSpinner.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+            spinner.setVisibility(View.GONE);
         }
         setOnSpinnerItemSelectedListener();
     }
@@ -198,9 +199,16 @@ public class MainActivity extends AppCompatActivity {
         //Log.d(TAG, "inside addItem and toggleDelete value is " + toggleDelete.isChecked());
         String name = autoCompTxtViewItemName.getText().toString().trim();
         autoCompTxtViewItemName.getText().clear();
+        EditText editTextQuantity = findViewById(R.id.editTextQuantity);
+        String quantity = editTextQuantity.getText().toString().trim();
+        editTextQuantity.getText().clear();
 
         if (name.length() == 0) {
             return;
+        }
+
+        if (quantity.length() == 0) {
+            quantity = "1";
         }
 
         String nameCapitalised = name.substring(0, 1).toUpperCase() + name.substring(1);
@@ -217,8 +225,8 @@ public class MainActivity extends AppCompatActivity {
 
         ContentValues cv = new ContentValues();
         cv.put(GroceryContract.GroceryEntry.COLUMN_NAME, nameCapitalised);
+        cv.put(GroceryContract.GroceryEntry.COLUMN_TEMP_QUANTITY, quantity);
         cv.put(GroceryContract.GroceryEntry.COLUMN_IN_LIST, SQL_TRUE);
-        //cv.put(GroceryContract.GroceryEntry.COLUMN_IN_TROLLEY, SQL_FALSE);
         String[] mySelectionArgs = {nameCapitalised};
         int numRowsUpdated = mDatabase.update(GroceryContract.GroceryEntry.TABLE_NAME,
                 cv,
@@ -361,12 +369,16 @@ public class MainActivity extends AppCompatActivity {
             editTextLocation.setVisibility(View.VISIBLE);
             confirmButton.setVisibility(View.VISIBLE);
             cancelButton.setVisibility(View.VISIBLE);
+            if (spinnerMarketArray.size() > 0) {
+                spinner.setVisibility(View.VISIBLE);
+            }
 
             recyclerView.setVisibility(View.GONE);
             buttonAddItem.setVisibility(View.GONE);
             autoCompTxtViewItemName.setVisibility(View.GONE);
             toggleEditAisle.setVisibility(View.GONE);
             toggleDelete.setVisibility(View.GONE);
+            findViewById(R.id.editTextQuantity).setVisibility(View.GONE);
             findViewById(R.id.buttonReorder).setVisibility(View.GONE);
 
             //buttonDeleteAll.setVisibility(View.GONE);
@@ -385,6 +397,7 @@ public class MainActivity extends AppCompatActivity {
             autoCompTxtViewItemName.setVisibility(View.VISIBLE);
             toggleEditAisle.setVisibility(View.VISIBLE);
             toggleDelete.setVisibility(View.VISIBLE);
+            findViewById(R.id.editTextQuantity).setVisibility(View.VISIBLE);
             findViewById(R.id.buttonReorder).setVisibility(View.VISIBLE);
 
             //buttonDeleteAll.setVisibility(View.VISIBLE);
@@ -609,8 +622,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+//    private void toggleAisleListener() {
+//        View v; // v will be each item (i.e. one set of aisle and product name) in recyclerview.
+//        EditText aisleEditText;
+//        for (int i = 0; i < recyclerView.getChildCount(); i++) {
+//            Log.d("MainActivity", "we are at the " + String.valueOf(i) + "th value of the recyclerview ------");
+//            v = recyclerView.getChildAt(i); // v encapsulates a pair of aisle editText and product name EditText.
+//            aisleEditText = v.findViewById(R.id.editTextAisleNumber);
+//            String aisleText = aisleEditText.getText().toString();
+//            Log.d("MainActivity", "isEditButtonPressed is true");
+//            Log.d("MainActivity", "aisle found --> " + aisleText);
+//            if (toggleEditAisle.isChecked()) {
+//                aisleEditText.setKeyListener(listener); //makes the EditText non-editable so, it acts like a TextView.
+//            } else {
+//                aisleEditText.setKeyListener(null); //makes the EditText non-editable so, it acts like a TextView.
+//            }
+//        }
+//        //if we are in edit mode and append editText is NOT focused
+//        if (!autoCompTxtViewItemName.hasFocus()) {
+//            closeKeyboard(); //if the keyboard is already open, setKeyListener(null) won't close it.
+//        }
+//    }
+
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void saveAisles() {
+        Log.d(TAG, "saveAisles: inside saveAisles()");
         //Log.d(TAG, "saveAisles() called");
         View v; // v will be each item (i.e. one set of aisleNumber, productName, checkBox views) in recyclerview.
         boolean atLeastOneAisleIsInvalid = false;
@@ -621,12 +658,22 @@ public class MainActivity extends AppCompatActivity {
             EditText aisleEditText = v.findViewById(R.id.editTextAisleNumber);
             TextView productNameTextView = v.findViewById(R.id.textViewProductName);
             String aisleNumberStr = aisleEditText.getText().toString().trim();
-            String productNameStr = productNameTextView.getText().toString().trim();
+
+            String productNameWithQuantity = productNameTextView.getText().toString().trim();
+            int startIndexOfName = 0;
+            while (productNameWithQuantity.charAt(startIndexOfName) != ' ') {
+                startIndexOfName++;
+            }
+            startIndexOfName += 2; //there are two spaces
+            String productNameStr = productNameWithQuantity.substring(startIndexOfName);
+
+            //String productNameStr = productNameTextView.getText().toString().trim();
             Log.d(TAG, "saveAisles: aisle found --> " + aisleNumberStr);
             Log.d(TAG, "saveAisles: product found --> " + productNameStr);
             Log.d(TAG, "saveAisles:  the position of the item is: " + i);
             //Log.d(TAG, "saveAisles: selectedMarketGroceryColumnName: " + GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase));
             if (aisleOrProductIsValid(aisleNumberStr, productNameStr)) {
+                Log.d(TAG, "saveAisles: calling updateAisle");
                 updateAisle(aisleNumberStr, productNameStr);
             } else {
                 if (!atLeastOneAisleIsInvalid) {//check if atLeastOneAisleIsInvalid was already set to true because we will scroll to the first invalid aisle.
@@ -662,6 +709,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void updateAisle(String aisleNumberStr, String productNameStr) {
+        Log.d(TAG, "updateAisle: inside the aisle number is " + aisleNumberStr + " and the item name is " + productNameStr);
         ContentValues cv = new ContentValues();
         if (aisleNumberStr.equals("?")) {
             cv.put(GroceryAdapter.getSelectedMarketGroceryListColumnName(mDatabase), -1);
@@ -823,7 +871,7 @@ public class MainActivity extends AppCompatActivity {
         Snackbar snackbar =   Snackbar.make(findViewById(R.id.rootLayout), resourceID, Snackbar.LENGTH_LONG);
 
         TextView snackbarActionTextView = snackbar.getView().findViewById( com.google.android.material.R.id.snackbar_action );
-        snackbarActionTextView.setTextSize( 30 );
+        snackbarActionTextView.setTextSize( 25 );
         //snackbarActionTextView.setTypeface(snackbarActionTextView.getTypeface(), Typeface.BOLD);
         snackbar.setAction("Ok", new View.OnClickListener() {
             @Override
@@ -835,14 +883,14 @@ public class MainActivity extends AppCompatActivity {
         //Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout)snackbar.getView();
         //layout.setMinimumHeight(300);//your custom height.
         TextView snackbarTextView = snackbar.getView().findViewById( com.google.android.material.R.id.snackbar_text );
-        snackbarTextView.setTextSize( 30 );
+        snackbarTextView.setTextSize( 25 );
         snackbar.show();
     }
 
 
     private void showDialogUnacceptableAisle() {
         String title = "Aisle must be either:\nNUMBER, EMPTY, or '?'";
-        String message = "EMPTY: sets aisle to what it was previously.\n'?' sets the aisle to unknown, like it was originally.";
+        String message = "EMPTY: sets aisle to what it was previously.\n\n'?' sets the aisle to unknown, like it was originally.";
         DialogInterface.OnClickListener listener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -935,17 +983,17 @@ public class MainActivity extends AppCompatActivity {
     >> A textView above the ticked column in the list that displays the x/y, where x is number of ticked items and y is number of items in trolley. This value of this textview is
     initiated in onCreate and updated whenever an item is added or removed.
     >> When you press "Delete Item(s)", the "clear" button appears and it clears all ticked items or (if there are none) it clears all unticked items.
+    >> Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
+    >> Allow user to input quantity, e.g. 4.5kg x Carrot. The default is Item name (without quantity)
     */
 
     /*
     Future implementations:
-    >> Allow user to input quantity, e.g. 4.5kg x Carrot. The default is Item name (without quantity)
-    >> Make the EditTexts of the list not allow keyboard pop up when not in "edit mode".
+    >> Allow copy and paste if it's separated by a comma or new line
+    >> If you long press an item or supermarket, you delete it (except you can recover all supermarkets)
     >> Make background thread (see your java google docs for link)
     >> Have a button to recover all deleted, so you don't have to display which ones were deleted.
-    >> Have a dictionary that looks at all items you added
-    >> Allow copy and paste if it's separated by a comma or
-    >> If you long press an item or supermarket, you delete it (except you can recover all supermarkets)
+
      */
 
 }
