@@ -3,7 +3,7 @@
     <string name="aisle_default">\?</string>
     <string name="product_name">Product name</string>
     <string name="product_quantity">1x</string>
-    <string name="button_add_new_item">Add</string>
+    <string name="button_add">Add</string>
     <string name="button_clear_ticked_then_unticked">Clear List</string>
     <string name="toggle_edit_list">Edit Aisles</string>
     <string name="toggle_save_list">Save Aisles</string>
@@ -11,10 +11,12 @@
     <string name="toggle_done_deleting_item">Done Deleting</string>
 <!--    <string name="snack_message_press_delete_items">Press DELETE ITEM(S) to allow swipe delete</string>-->
     <string name="snack_message_add_a_supermarket">Add a supermarket before you can save aisles.</string>
-    <string name="snack_message_market_already_in_table">That supermarket is already in the table.</string>
-    <string name="snack_message_swipe_to_delete">Swipe/drag item left or right to delete.</string>
+    <string name="snack_message_market_already_in_table">That supermarket is already in the list.</string>
+    <string name="snack_message_swipe_to_delete">Swipe/drag item left or right to delete. Long press to permanently delete.</string>
     <string name="snack_message_press_save_changes">Press \"Save Aisles\" before doing other things.</string>
     <string name="snack_message_press_done_deleting">Press \"Done Deleting\" before doing other things.</string>
+    <string name="snack_message_at_least_two_markets_to_delete">The list of markets cannot be left empty.</string>
+    <string name="snack_message_market_must_be_in_list_to_delete">The market must be already in the list in order to delete it.</string>
     <string name="supermarket_example">e.g. Countdown</string>
     <string name="location_example">e.g. Northlands</string>
     <string name="supermarket_location_example">e.g. Northlands</string>
@@ -22,7 +24,8 @@
     <string name="button_spinner_edit">Edit</string>
     <string name="button_old_spinner_recover">Recover</string>
     <string name="spinner_edit_add_new_market">Add New Supermarket</string>
-    <string name="button_cancel">Cancel</string>
+    <string name="button_delete_market">Delete</string>
+    <string name="button_recover_all_markets">Recover All\ \ </string>
     <string name="button_confirm">Confirm</string>
     <string name="button_reorder">Re-order</string>
     <string name="snack_message_reorder_aisle">Ordered by aisle number.</string>

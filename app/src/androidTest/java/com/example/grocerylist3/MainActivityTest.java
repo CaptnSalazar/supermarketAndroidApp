@@ -102,8 +102,8 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         onView(withId(R.id.editTextMarketName)).perform(typeText("Aaa Loja"));
         onView(withId(R.id.editTextMarketLocation));
         onView(withId(R.id.editTextMarketLocation)).perform(typeText("Brazil"));
-        onView(withId(R.id.buttonConfirm));
-        onView(withId(R.id.buttonConfirm)).perform(click());
+        onView(withId(R.id.buttonAddMarket));
+        onView(withId(R.id.buttonAddMarket)).perform(click());
         // PROBLEM I HAD: WHEN YOU PRESS CONFIRM AND THE SUPERMARKET IS ALREADY THERE, THE VIEW DOESN'T GO BACK.
 
         //onData(instanceOf(Market.class)).atPosition(0).perform(click());  //this works
@@ -116,8 +116,8 @@ If you want to use a resource of your test app (e.g. a test input for one of you
         onView(withId(R.id.editTextMarketName)).perform(typeText("Aaa Loja"));
         onView(withId(R.id.editTextMarketLocation));
         onView(withId(R.id.editTextMarketLocation)).perform(typeText("Brazil"));
-        onView(withId(R.id.buttonConfirm));
-        onView(withId(R.id.buttonConfirm)).perform(click());
+        onView(withId(R.id.buttonAddMarket));
+        onView(withId(R.id.buttonAddMarket)).perform(click());
 
         // https://stackoverflow.com/questions/37184933/espresso-ondata-error-performing-load-adapter-data-on-view
         onData(instanceOf(Market.class)).atPosition(0).check(matches(withText("Aaa Loja (Brazil)"))); //this works
@@ -271,8 +271,8 @@ If you want to use a resource of your test app (e.g. a test input for one of you
     private void checkViewsDisplayedWhenNotEditingMarket() {
         onView(withId(R.id.editTextMarketName)).check(matches(not(isDisplayed())));
         onView(withId(R.id.editTextMarketLocation)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.buttonConfirm)).check(matches(not(isDisplayed())));
-        onView(withId(R.id.buttonCancel)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.buttonAddMarket)).check(matches(not(isDisplayed())));
+        onView(withId(R.id.buttonDeleteMarket)).check(matches(not(isDisplayed())));
 
         onView(withId(R.id.buttonEditSpinner)).check(matches(isDisplayed()));
 
@@ -287,8 +287,8 @@ If you want to use a resource of your test app (e.g. a test input for one of you
     private void checkViewsDisplayedWhileEditingMarket() {
         onView(withId(R.id.editTextMarketName)).check(matches(isDisplayed()));
         onView(withId(R.id.editTextMarketLocation)).check(matches(isDisplayed()));
-        onView(withId(R.id.buttonConfirm)).check(matches(isDisplayed()));
-        onView(withId(R.id.buttonCancel)).check(matches(isDisplayed()));
+        onView(withId(R.id.buttonAddMarket)).check(matches(isDisplayed()));
+        onView(withId(R.id.buttonDeleteMarket)).check(matches(isDisplayed()));
 
         onView(withId(R.id.buttonEditSpinner)).check(matches(isDisplayed()));
 

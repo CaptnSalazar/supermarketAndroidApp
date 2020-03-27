@@ -97,8 +97,9 @@ public class MainActivity extends AppCompatActivity {
         toggleEditAisle = findViewById(R.id.toggleButtonEditSave);
         toggleEditAisle.setTextColor(Color.BLACK);
         toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
-        //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("green")));
         setToggleEditAisleListener();
+
+        findViewById(R.id.buttonReorder).setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
 
         autoCompTxtViewItemName = findViewById(R.id.autoCompTextViewNewItem);
         ArrayAdapter<String> adapterAutoComp = new ArrayAdapter<String>(this,
@@ -155,7 +156,6 @@ public class MainActivity extends AppCompatActivity {
         mDatabase.execSQL("DELETE FROM " + GroceryContract.SupermarketsVisited.TABLE_NAME_MARKET);
 
         mAdapter.swapCursorGrocery(getAllItems());
-        //mAdapter.swapCursorMarket(getAllSupermarkets());
 
         spinnerMarketArray = new ArrayList<Market>();
         //these thee statements are needed for spinner to refresh.
@@ -263,19 +263,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void onCancel(View view) {
-        //Log.d(TAG, "onCancel: ");
-        setLayoutEditSpinner();
-    }
-
-
-    public void onConfirm(View view) {
+    public void onAddMarket(View view) {
         //Log.d(TAG, "onConfirm: ");
 
         EditText editTextName = findViewById(R.id.editTextMarketName);
-        String newMarketName = editTextName.getText().toString().trim();
+        String newMarketName = capitalizeWord(editTextName.getText().toString().trim());
         EditText editTextLocation = findViewById(R.id.editTextMarketLocation);
-        String newMarketLocation = editTextLocation.getText().toString().trim();
+        String newMarketLocation = capitalizeWord(editTextLocation.getText().toString().trim());
 
         if ((newMarketName.length() == 0) || (newMarketLocation.length() == 0)){
             myShowSnackBar(R.string.snack_message_market_name_or_location_empty);
@@ -284,12 +278,11 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (GroceryAdapter.marketIsAlreadyInTable(mDatabase, newMarketName, newMarketLocation)) {
-            closeKeyboard();
-            // MAYBE INSTEAD OF SNACKBAR, MAKE A TEXTVIEW APPEAR SAYING IN RED, "MarketName (Location) already exists."
+            //closeKeyboard();
             myShowSnackBar(R.string.snack_message_market_already_in_table);
             //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_market_already_in_table, Snackbar.LENGTH_SHORT).show();
         } else {
-
+            Log.d(TAG, "onConfirm: capitalized :" + capitalizeWord(newMarketName) + " " + capitalizeWord(newMarketLocation));
             addMarketToTable(newMarketName, newMarketLocation);
 
             /*TextView textViewSpinnerEmpty = findViewById(R.id.textViewSpinnerEmpty);
@@ -346,6 +339,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public static String capitalizeWord(String str){
+        if (str.trim().length() == 0) {
+            return "";
+        }
+        String words[]=str.split("\\s");
+        String capitalizeWord="";
+        for(String w:words){
+            String first=w.substring(0,1);
+            String afterfirst=w.substring(1);
+            capitalizeWord+=first.toUpperCase()+afterfirst+" ";
+        }
+        return capitalizeWord;
+    }
+
+
     private void setLayoutEditSpinner() {
         mIsSpinnerBeingEdited = !mIsSpinnerBeingEdited; //toggle mIsSpinnerBeingEdited
 
@@ -354,8 +362,7 @@ public class MainActivity extends AppCompatActivity {
         EditText editTextName = findViewById(R.id.editTextMarketName);
         TextView textViewLocation = findViewById(R.id.textViewMarketLocation);
         EditText editTextLocation = findViewById(R.id.editTextMarketLocation);
-        Button confirmButton = findViewById(R.id.buttonConfirm);
-        Button cancelButton = findViewById(R.id.buttonCancel);
+        Button confirmButton = findViewById(R.id.buttonAddMarket);
         Button buttonAddItem = findViewById(R.id.buttonAddItem);
 
         //Button buttonDeleteAll = findViewById(R.id.button_delete_all);
@@ -368,7 +375,6 @@ public class MainActivity extends AppCompatActivity {
             textViewLocation.setVisibility(View.VISIBLE);
             editTextLocation.setVisibility(View.VISIBLE);
             confirmButton.setVisibility(View.VISIBLE);
-            cancelButton.setVisibility(View.VISIBLE);
             if (spinnerMarketArray.size() > 0) {
                 spinner.setVisibility(View.VISIBLE);
             }
@@ -390,7 +396,6 @@ public class MainActivity extends AppCompatActivity {
             editTextLocation.setVisibility(View.GONE);
             editTextName.setVisibility(View.GONE);
             confirmButton.setVisibility(View.GONE);
-            cancelButton.setVisibility(View.GONE);
 
             recyclerView.setVisibility(View.VISIBLE);
             buttonAddItem.setVisibility(View.VISIBLE);
@@ -447,6 +452,13 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "onCheckBox:");
                 toggleInTrolley(position); //indirectly tick/untick the checkbox.
             }
+            @Override
+            public void onTextViewProductName(int position) {
+                Log.d(TAG, "onTextViewProductName: Position of textView that was long pressed: " + position);
+                if (toggleDelete.isChecked()) {
+                    showDialogAskToPermanentlyDeleteItem(mAdapter.getItemName(position));
+                }
+            }
             /* @Override
             public void onTextViewProductName(int position, boolean hasFocus) {
                 Log.d(TAG, "onTextViewProductName: Position of textView whose focus changed: " + position + ". Has focus? " + hasFocus);
@@ -491,10 +503,10 @@ public class MainActivity extends AppCompatActivity {
                     myShowSnackBar(R.string.snack_message_press_save_changes);
                     //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_save_changes, Snackbar.LENGTH_SHORT).show();
                 } else if (isChecked) {
-                    closeKeyboard();
+                    //closeKeyboard();
                     requiredItemDeletionSuccession = 2;
                     //Log.d(TAG, "toggleDelete is checked");
-                    toggleDelete.setTextColor(Color.DKGRAY);
+                    toggleDelete.setTextColor(Color.rgb(2,2,2));
                     toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
                     mSwipeable = true; // make list swipeable
                     myShowSnackBar(R.string.snack_message_swipe_to_delete);
@@ -561,24 +573,18 @@ public class MainActivity extends AppCompatActivity {
                     mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 600);
                     mHandlerToggleFlash.postDelayed(mToggleFlashRunnable, 1200);
                     myShowSnackBar(R.string.snack_message_press_done_deleting);
-                    //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_press_done_deleting, Snackbar.LENGTH_SHORT).show();
                 } else if (isChecked) {
-                    //Log.d(TAG, "toggleEditAisle is checked");
-                    toggleEditAisle.setTextColor(Color.DKGRAY);
+                    toggleEditAisle.setTextColor(Color.rgb(2,2,2));
                     toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
                     mAdapter.alternateIsToggleEditAisleCheckedValue();
-                    //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("red")));
                 } else {
-                    //Log.d(TAG, "toggleEditAisle is NOT checked");
                     toggleEditAisle.setTextColor(Color.BLACK);
                     toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
                     mAdapter.alternateIsToggleEditAisleCheckedValue();
-                    //toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("green")));
                     if (GroceryAdapter.marketTableIsNotEmpty(mDatabase)) {
                         saveAisles();
                     } else {
                         myShowSnackBar(R.string.snack_message_add_a_supermarket);
-                        //Snackbar.make(findViewById(R.id.rootLayout), R.string.snack_message_add_a_supermarket, Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }
@@ -600,7 +606,7 @@ public class MainActivity extends AppCompatActivity {
         if (toggleEditAisle.isChecked() && (!toggleDelete.isChecked())) {
             int color = toggleEditAisle.getCurrentTextColor();
             if (color == Color.BLACK) {
-                toggleEditAisle.setTextColor(Color.DKGRAY);
+                toggleEditAisle.setTextColor(Color.rgb(2,2,2));
                 toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
             } else {
                 toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
@@ -609,7 +615,7 @@ public class MainActivity extends AppCompatActivity {
         } else if (toggleDelete.isChecked() && (!toggleEditAisle.isChecked())) {
             int color = toggleDelete.getCurrentTextColor();
             if (color == Color.BLACK) {
-                toggleDelete.setTextColor(Color.DKGRAY);
+                toggleDelete.setTextColor(Color.rgb(2,2,2));
                 toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
             } else {
                 toggleDelete.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(107, 214, 213)));
@@ -686,7 +692,7 @@ public class MainActivity extends AppCompatActivity {
         }
         if (atLeastOneAisleIsInvalid) {
             toggleEditAisle.setChecked(true);
-            toggleEditAisle.setTextColor(Color.DKGRAY);
+            toggleEditAisle.setTextColor(Color.rgb(2,2,2));
             toggleEditAisle.setBackgroundTintList(ColorStateList.valueOf(Color.rgb(224, 67, 91)));
             mAdapter.alternateIsToggleEditAisleCheckedValue();
             recyclerView.scrollToPosition(mAdapter.getItemPosition(nameOfFirstItemWithInvalidAisle));
@@ -868,10 +874,11 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void myShowSnackBar(int resourceID) {
+        closeKeyboard();
         Snackbar snackbar =   Snackbar.make(findViewById(R.id.rootLayout), resourceID, Snackbar.LENGTH_LONG);
 
         TextView snackbarActionTextView = snackbar.getView().findViewById( com.google.android.material.R.id.snackbar_action );
-        snackbarActionTextView.setTextSize( 25 );
+        snackbarActionTextView.setTextSize( 20 );
         //snackbarActionTextView.setTypeface(snackbarActionTextView.getTypeface(), Typeface.BOLD);
         snackbar.setAction("Ok", new View.OnClickListener() {
             @Override
@@ -883,7 +890,7 @@ public class MainActivity extends AppCompatActivity {
         //Snackbar.SnackbarLayout layout = (Snackbar.SnackbarLayout)snackbar.getView();
         //layout.setMinimumHeight(300);//your custom height.
         TextView snackbarTextView = snackbar.getView().findViewById( com.google.android.material.R.id.snackbar_text );
-        snackbarTextView.setTextSize( 25 );
+        snackbarTextView.setTextSize( 20 );
         snackbar.show();
     }
 
@@ -946,6 +953,40 @@ public class MainActivity extends AppCompatActivity {
                 .setMessage(message)
                 .setPositiveButton("Yes", listenerYes)
                 .setNegativeButton("No", listenerNo)
+                .create().show();
+    }
+
+
+    private void showDialogAskToPermanentlyDeleteItem(final String itemName) {
+        String title = "Permanently Delete Item?";
+        String message = "All information regarding this item, i.e. which supermarkets contain it and in which aisles, will be delete.";
+
+        DialogInterface.OnClickListener listenerDelete = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String[] itemNameSelectionArgs = new String[]{itemName};
+                mDatabase.delete(
+                        GroceryContract.GroceryEntry.TABLE_NAME,
+                        GroceryContract.GroceryEntry.COLUMN_NAME + " =?",
+                        itemNameSelectionArgs);
+                mAdapter.swapCursorGrocery(getAllItems());
+                updateAutoCompleteTextViewArray();
+                dialog.dismiss();
+            }
+        };
+
+        DialogInterface.OnClickListener listenerCancel = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        };
+
+        new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton("Delete", listenerDelete)
+                .setNegativeButton("Cancel", listenerCancel)
                 .create().show();
     }
 

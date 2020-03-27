@@ -1,5 +1,6 @@
 package com.example.grocerylist3;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -39,6 +40,7 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
 
         //void onItemClick(int position);
         void onCheckBox(int position);
+        void onTextViewProductName(int position);
         //void onTextViewProductName(int position, boolean hasFocus);
     }
 
@@ -92,17 +94,18 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
                 }
             });  */
 
-            /* nameText.setOnClickListener(new View.OnClickListener() {
+            nameText.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
-                public void onClick(View v) {
+                public boolean onLongClick(View v) {
                     if (listener != null) {
                         int position = getAdapterPosition();
                         if (position != RecyclerView.NO_POSITION) {
                             listener.onTextViewProductName(position);
                         }
                     }
+                    return true;
                 }
-            });  */
+            });
         }
     }
 
@@ -280,13 +283,13 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
             String marketLocation = cursorMarkets.getString(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_MARKET_LOCATION));
             Integer marketID = cursorMarkets.getInt(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited._ID));
             boolean marketIsSelected = integerToBoolean(cursorMarkets.getInt(cursorMarkets.getColumnIndex(GroceryContract.SupermarketsVisited.COLUMN_IS_MARKET_SELECTED)));
-            Market market = new Market(marketName, marketLocation , marketID, marketIsSelected);
+            Market market = new Market(marketName, marketLocation, marketID, marketIsSelected);
             newSpinnerArray.add(market);
+            Log.d(TAG, "getMarketsList: not-deleted marketName: " + marketName);
             if (marketIsSelected) {
                 positionMarketSelected = position;
                 Log.d(TAG, "getMarketsList:  market" + marketName + " is selected and has position: " + positionMarketSelected);
             }
-            Log.d(TAG, "getMarketsList: marketName: " + marketName);
             position++;
             moveSucceeded = cursorMarkets.moveToNext();
         }
@@ -299,6 +302,11 @@ public class GroceryAdapter extends RecyclerView.Adapter <GroceryAdapter.Grocery
     public int getPositionMarketSelected() {
         Log.d(TAG, "getPositionMarketSelected:   position of marketSelected is " + positionMarketSelected);
         return positionMarketSelected;
+    }
+
+
+    public void setPositionMarketSelected(int position) {
+        positionMarketSelected = position;
     }
 
 

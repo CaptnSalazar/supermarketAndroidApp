@@ -58,7 +58,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:onClick="onAddItem"
-        android:text="@string/button_add_new_item" />
+        android:text="@string/button_add" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerview"
@@ -84,9 +84,10 @@
         android:layout_below="@+id/buttonAddItem"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
-        android:layout_marginTop="10dp"
-        android:layout_marginEnd="30dp"
-        android:layout_marginRight="30dp"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="224dp"
+        android:layout_marginEnd="157dp"
+        android:layout_marginRight="157dp"
         android:onClick="onDeleteAllRows"
         android:text="Delete All"
         android:visibility="gone" />
@@ -123,26 +124,15 @@
         android:layout_width="320dp"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
         android:layout_toEndOf="@+id/buttonEditSpinner"
         android:layout_toRightOf="@+id/buttonEditSpinner" />
-
-<!--    <TextView-->
-<!--        android:id="@+id/textViewSpinnerEmpty"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_alignParentTop="true"-->
-<!--        android:layout_marginStart="8dp"-->
-<!--        android:layout_marginLeft="8dp"-->
-<!--        android:layout_marginTop="8dp"-->
-<!--        android:layout_marginEnd="8dp"-->
-<!--        android:layout_marginRight="8dp"-->
-<!--        android:layout_toEndOf="@+id/buttonEditSpinner"-->
-<!--        android:layout_toRightOf="@+id/buttonEditSpinner"-->
-<!--        android:text="Add a new market"-->
-<!--        android:textSize="25sp" />-->
 
     <Button
         android:id="@+id/buttonEditSpinner"
@@ -217,31 +207,17 @@
         android:visibility="gone" />
 
     <Button
-        android:id="@+id/buttonCancel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/editTextMarketLocation"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
-        android:layout_toStartOf="@+id/buttonConfirm"
-        android:layout_toLeftOf="@+id/buttonConfirm"
-        android:onClick="onCancel"
-        android:text="@string/button_cancel"
-        android:visibility="gone" />
-
-    <Button
-        android:id="@+id/buttonConfirm"
+        android:id="@+id/buttonAddMarket"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/editTextMarketLocation"
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="104dp"
-        android:layout_marginRight="104dp"
-        android:onClick="onConfirm"
-        android:text="@string/button_confirm"
+        android:layout_marginEnd="50dp"
+        android:layout_marginRight="50dp"
+        android:onClick="onAddMarket"
+        android:text="@string/button_add"
         android:visibility="gone" />
 
     <Button
